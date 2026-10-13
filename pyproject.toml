@@ -18,6 +18,7 @@ dependencies = [
 
 [project.scripts]
 trl-datos = "trlavanda.pipelines.download_data:main"
+trl-ranking = "trlavanda.pipelines.ranking:main"
 
 [dependency-groups]
 dev = [

@@ -38,13 +38,28 @@ Las descargas de EDGAR tienen caché: si lo vuelves a ejecutar, solo baja lo que
 
 Opciones: `--skip-edgar`, `--skip-prices`, `--sample N`, `--refresh`.
 
-## 4. Explorar los datos
+## 4. Fase 2: ver el ranking
+
+```powershell
+uv run trl-ranking                       # ranking de hoy (top 30)
+uv run trl-ranking --top 50
+uv run trl-ranking --sector "Health Care"
+uv run trl-ranking --date 2020-03-31     # lo que habría salido en esa fecha
+uv run trl-ranking --rebuild             # recalcular tras volver a descargar datos
+```
+
+Columnas: `score` es la media de los 4 factores (`f_value`, `f_quality`, `f_momentum`, `f_growth`). Cada uno está en desviaciones típicas respecto a la media de su sector: +1 = bastante mejor que la media del sector, 0 = en la media. Ver docs/CONCEPTOS.md.
+
+Para tener datos frescos: `uv run trl-datos` y luego `uv run trl-ranking --rebuild`.
+
+## 4b. Explorar los datos
 
 ```powershell
 uv run python
 ```
 ```python
 import polars as pl
+
 pl.read_parquet("data/raw/prices/prices.parquet").head()
 ```
 

@@ -23,6 +23,7 @@ Contexto para retomar el trabajo (para el usuario y para Claude en futuras sesio
 ## Notas técnicas
 - Wikipedia: miembros actuales en "List of S&P 500 companies"; el historial de cambios se movió (2026) a "Historical components of the S&P 500". `_find_table` busca las tablas por cabecera.
 - EDGAR companyfacts incluye datos de formularios que no son estados financieros (p. ej. DEF 14A, *pay vs performance*). En la fase 2 hay que filtrar `form` a 10-K, 10-Q (y sus /A) y quedarse con el primer `filed` de cada (concepto, periodo).
+- Precios: `adj_close` (rentabilidades/momentum), `raw_close` = precio real del día (capitalización).
 - yfinance con hilos a veces falla con "database is locked": `prices.py` reintenta uno a uno.
 - Comandos en PowerShell: si `uv`/`git` no aparecen en el PATH, abrir otra terminal.
 
@@ -39,7 +40,12 @@ Contexto para retomar el trabajo (para el usuario y para Claude en futuras sesio
   **Siguiente paso:** recuperar los que faltan (renombrados tipo ACE→CB; buscar CIK por nombre de empresa
   con los datos de Wikipedia) y decidir cómo tratar los deslistados sin precio. Ver `coverage_report.json`.
 - [x] Prompt DeepSeek escrito y probado con Haiku (falta probarlo en el servicio del usuario)
-- [ ] Fase 2: factores y ranking
+- [x] Fase 2 (v1, 2026-10-14): `uv run trl-ranking` funciona. 491 empresas con score a fecha de hoy.
+  Archivos: `factors/fundamentals.py` (point-in-time, TTM desde YTD), `factors/sectors.py` (SIC→sector),
+  `factors/screener.py` (métricas, winsor 5 %, z por sector, score equiponderado), `pipelines/ranking.py`.
+  Salida: `data/processed/factor_scores.parquet` (incluye `fwd_ret_1m` SOLO para evaluar en la fase 3).
+  Pendiente/mejoras: mapa SIC imperfecto (p. ej. LRCX 3559 sale Industrials); acciones multiclase
+  (BRK, IBKR) sin capitalización; bancos/aseguradoras con métricas poco adecuadas (EV/EBITDA, margen bruto).
 - [ ] Fase 3: backtest
 - [ ] Fase 4: Google Cloud (opcional; requiere cuenta de facturación + alertas de presupuesto)
 - [ ] Subir a GitHub (lo hace el usuario: crear repo vacío y `git push`, ver GUIA.md §5)

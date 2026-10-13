@@ -52,6 +52,11 @@ Contexto para retomar el trabajo (para el usuario y para Claude en futuras sesio
   La app lee `data/app/` (copia ligera ~7 MB, SÍ versionada; `app/export.py`, se regenera en `trl-ranking --rebuild`)
   para poder publicarse en Streamlit Community Cloud (entrypoint `src/trlavanda/app/main.py`, deps en
   `src/trlavanda/app/requirements.txt`). Idea: automatizar la actualización diaria con GitHub Actions.
-- [ ] Fase 3: backtest
+- [x] Web estática estilo app de bolsa (2026-10-14): https://heeriik.github.io/TrLavanda/ — `web/` (index.html,
+  style.css, app.js; Lightweight Charts 4.2.0 desde unpkg), datos JSON de `web/export.py` en `web/data/` (no
+  versionado), publicación con `uv run trl-web --publish` (ghp-import fuerza la rama gh-pages). Inspirada en
+  el estilo de las apps de bolsa (oscuro, minimal), SIN nombre/logo/marca de Trade Republic.
+  El gráfico principal es el S&P 500 (SPY): la curva de la estrategia NO se muestra hasta tener backtest serio.
+- [ ] Fase 3: backtest (añadir curva estrategia vs SPY a la web cuando esté)
 - [ ] Fase 4: Google Cloud (opcional; requiere cuenta de facturación + alertas de presupuesto)
 - [x] Publicado en https://github.com/heeriik/TrLavanda (público, MIT). Commits con email noreply de GitHub. `gh` está en `C:\Program Files\GitHub CLI\gh.exe` (la pestaña de terminal del app no completa `gh auth login`; lanzarlo en segundo plano).

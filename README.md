@@ -4,6 +4,8 @@
 
 Proyecto personal de aprendizaje en **finanzas cuantitativas**. Puntúa las empresas del S&P 500 según cuatro factores clásicos (**valor, calidad, momentum y crecimiento**) usando solo datos públicos y gratuitos, y está diseñado para comprobar con un backtest honesto si esa estrategia habría funcionado.
 
+**🌐 Web en vivo: https://heeriik.github.io/TrLavanda/**
+
 > Herramienta de análisis y aprendizaje. **No es una recomendación de inversión.**
 
 ## Ejemplo de salida
@@ -29,7 +31,7 @@ rank  ticker  sector                   score  f_value  f_quality  f_momentum  f_
 | 1. Datos | Composición histórica del S&P 500 (Wikipedia), precios diarios (yfinance), estados financieros XBRL (API de SEC EDGAR), en Parquet | ✅ |
 | 2. Screener | Fundamentales *point-in-time*, TTM, 10 métricas, winsorización, z-score por sector, score compuesto | ✅ |
 | 3. Backtest | Top-N mensual con costes de transacción, CAGR, Sharpe, máxima caída, regresión contra factores (statsmodels) | 🔜 |
-| Interfaz | App web en Streamlit: ranking filtrable, ficha por empresa, reparto por sectores | ✅ |
+| Interfaz | Web estática estilo app de bolsa (GitHub Pages, gráficos de TradingView) y app de exploración en Streamlit | ✅ |
 | 4. Nube | Ejecución diaria en Google Cloud Run + BigQuery (nivel gratuito) | 🔜 |
 
 ## Rigor metodológico
@@ -56,7 +58,8 @@ uv sync                          # entorno e instalación
 cp .env.example .env             # pon un email de contacto en SEC_USER_AGENT (lo exige la SEC)
 uv run trl-datos                 # descarga (~10 min la primera vez)
 uv run trl-ranking               # ranking actual en la terminal
-uv run trl-app                   # interfaz web (Streamlit) en http://localhost:8501
+uv run trl-app                   # app de exploración (Streamlit) en http://localhost:8501
+uv run trl-web --publish         # exporta a JSON y publica la web en GitHub Pages
 uv run trl-ranking --date 2020-03-31 --sector "Health Care"
 uv run pytest
 ```
@@ -80,7 +83,7 @@ prompts/       instrucciones para investigación cualitativa de empresas chinas 
 
 ## Stack
 
-Python 3.14 · Polars · Streamlit · Altair · statsmodels · yfinance · SEC EDGAR API · uv · pytest · ruff
+Python 3.14 · Polars · statsmodels · Streamlit · HTML/CSS/JS + TradingView Lightweight Charts · GitHub Pages · yfinance · SEC EDGAR API · uv · pytest · ruff
 
 ## Licencia
 

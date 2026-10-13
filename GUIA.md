@@ -52,7 +52,20 @@ Columnas: `score` es la media de los 4 factores (`f_value`, `f_quality`, `f_mome
 
 Para tener datos frescos: `uv run trl-datos` y luego `uv run trl-ranking --rebuild`.
 
-## 4a. Interfaz web
+## 4a. Web pública (estilo app de bolsa)
+
+En vivo en https://heeriik.github.io/TrLavanda/. Es HTML/CSS/JS en la carpeta `web/`, y lee unos JSON que genera Python.
+
+```powershell
+uv run trl-web                                            # genera web/data
+uv run python -m http.server 8600 --directory web         # verla en local: http://localhost:8600
+uv run trl-web --publish                                  # publicar (rama gh-pages)
+```
+
+Para actualizarla con datos nuevos: `uv run trl-datos`, después `uv run trl-ranking --rebuild` y por último `uv run trl-web --publish`.
+Los datos de la web no se guardan en `main`. La rama `gh-pages` se sobrescribe en cada publicación, así el historial no engorda.
+
+## 4b. App de exploración (Streamlit)
 
 ```powershell
 uv run trl-app
@@ -86,7 +99,7 @@ uv run trl-ranking --rebuild
 git add data/app; git commit -m "Datos actualizados"; git push   # la app se actualiza sola
 ```
 
-## 4b. Explorar los datos
+## 4c. Explorar los datos
 
 ```powershell
 uv run python

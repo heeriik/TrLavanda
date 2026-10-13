@@ -52,6 +52,20 @@ Columnas: `score` es la media de los 4 factores (`f_value`, `f_quality`, `f_mome
 
 Para tener datos frescos: `uv run trl-datos` y luego `uv run trl-ranking --rebuild`.
 
+## 4a. Interfaz web
+
+```powershell
+uv run trl-app
+```
+
+Se abre en el navegador (http://localhost:8501). Tiene 4 pestañas:
+- **Ranking**: la tabla del ranking con filtros por fecha, sector y capitalización (en la barra lateral), y un gráfico que muestra de qué factores sale el score.
+- **Empresa**: precio histórico, evolución de cada factor y sus métricas frente a la mediana de su sector.
+- **Sectores**: cómo se reparte el top entre sectores a lo largo del tiempo.
+- **Cómo funciona**: resumen del método y de sus limitaciones.
+
+Para cerrarla: Ctrl+C en la terminal. Si cambias los datos (`trl-datos` + `trl-ranking --rebuild`), recarga la página.
+
 ## 4b. Explorar los datos
 
 ```powershell

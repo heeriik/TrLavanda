@@ -46,6 +46,9 @@ Contexto para retomar el trabajo (para el usuario y para Claude en futuras sesio
   Salida: `data/processed/factor_scores.parquet` (incluye `fwd_ret_1m` SOLO para evaluar en la fase 3).
   Pendiente/mejoras: mapa SIC imperfecto (p. ej. LRCX 3559 sale Industrials); acciones multiclase
   (BRK, IBKR) sin capitalización; bancos/aseguradoras con métricas poco adecuadas (EV/EBITDA, margen bruto).
+- [x] Interfaz web (2026-10-14): `uv run trl-app` (Streamlit, `src/trlavanda/app/main.py`, tema lavanda en
+  `.streamlit/config.toml`). Se descartó heygen hyperframes: genera vídeo MP4 desde HTML, no UI interactiva
+  (útil quizá para un vídeo demo). Preview en el app: `.claude/launch.json` → "trlavanda-app".
 - [ ] Fase 3: backtest
 - [ ] Fase 4: Google Cloud (opcional; requiere cuenta de facturación + alertas de presupuesto)
 - [x] Publicado en https://github.com/heeriik/TrLavanda (público, MIT). Commits con email noreply de GitHub. `gh` está en `C:\Program Files\GitHub CLI\gh.exe` (la pestaña de terminal del app no completa `gh auth login`; lanzarlo en segundo plano).

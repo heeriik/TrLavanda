@@ -29,6 +29,7 @@ rank  ticker  sector                   score  f_value  f_quality  f_momentum  f_
 | 1. Datos | Composición histórica del S&P 500 (Wikipedia), precios diarios (yfinance), estados financieros XBRL (API de SEC EDGAR), en Parquet | ✅ |
 | 2. Screener | Fundamentales *point-in-time*, TTM, 10 métricas, winsorización, z-score por sector, score compuesto | ✅ |
 | 3. Backtest | Top-N mensual con costes de transacción, CAGR, Sharpe, máxima caída, regresión contra factores (statsmodels) | 🔜 |
+| Interfaz | App web en Streamlit: ranking filtrable, ficha por empresa, reparto por sectores | ✅ |
 | 4. Nube | Ejecución diaria en Google Cloud Run + BigQuery (nivel gratuito) | 🔜 |
 
 ## Rigor metodológico
@@ -54,7 +55,8 @@ El objetivo no es un backtest bonito, sino uno **creíble**. El diseño evita lo
 uv sync                          # entorno e instalación
 cp .env.example .env             # pon un email de contacto en SEC_USER_AGENT (lo exige la SEC)
 uv run trl-datos                 # descarga (~10 min la primera vez)
-uv run trl-ranking               # ranking actual
+uv run trl-ranking               # ranking actual en la terminal
+uv run trl-app                   # interfaz web (Streamlit) en http://localhost:8501
 uv run trl-ranking --date 2020-03-31 --sector "Health Care"
 uv run pytest
 ```
@@ -69,7 +71,8 @@ src/trlavanda/
   data/        universe.py · prices.py · edgar.py
   factors/     fundamentals.py · sectors.py · screener.py
   backtest/    (fase 3)
-  pipelines/   trl-datos · trl-ranking
+  app/         interfaz Streamlit
+  pipelines/   trl-datos · trl-ranking · trl-app
 tests/         pytest
 docs/          conceptos aprendidos
 prompts/       instrucciones para investigación cualitativa de empresas chinas con LLM
@@ -77,7 +80,7 @@ prompts/       instrucciones para investigación cualitativa de empresas chinas 
 
 ## Stack
 
-Python 3.14 · Polars · statsmodels · yfinance · SEC EDGAR API · uv · pytest · ruff
+Python 3.14 · Polars · Streamlit · Altair · statsmodels · yfinance · SEC EDGAR API · uv · pytest · ruff
 
 ## Licencia
 

@@ -14,11 +14,14 @@ dependencies = [
     "python-dotenv>=1.0",
     "statsmodels>=0.14",
     "tqdm>=4.66",
+    "streamlit>=1.40",
+    "altair>=5.4",
 ]
 
 [project.scripts]
 trl-datos = "trlavanda.pipelines.download_data:main"
 trl-ranking = "trlavanda.pipelines.ranking:main"
+trl-app = "trlavanda.pipelines.app:main"
 
 [dependency-groups]
 dev = [

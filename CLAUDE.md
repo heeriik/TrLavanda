@@ -34,8 +34,12 @@ Contexto para retomar el trabajo (para el usuario y para Claude en futuras sesio
 
 ## Estado
 - [x] Estructura del proyecto, git, uv
-- [ ] Fase 1: datos (código escrito; pendiente descarga completa y revisión de cobertura)
+- [~] Fase 1: datos descargados (2026-10-14): 818 tickers históricos, 619 empresas con fundamentales, ~76 MB.
+  Cobertura (precio + CIK) de los miembros del índice: 72 % en 2010 → 89 % en 2019 → 99 % en 2026.
+  **Siguiente paso:** recuperar los que faltan (renombrados tipo ACE→CB; buscar CIK por nombre de empresa
+  con los datos de Wikipedia) y decidir cómo tratar los deslistados sin precio. Ver `coverage_report.json`.
+- [x] Prompt DeepSeek escrito y probado con Haiku (falta probarlo en el servicio del usuario)
 - [ ] Fase 2: factores y ranking
 - [ ] Fase 3: backtest
 - [ ] Fase 4: Google Cloud (opcional; requiere cuenta de facturación + alertas de presupuesto)
-- [ ] Prompt DeepSeek para empresas chinas (`prompts/deepseek_china.md`)
+- [ ] Subir a GitHub (lo hace el usuario: crear repo vacío y `git push`, ver GUIA.md §5)

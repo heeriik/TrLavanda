@@ -25,5 +25,8 @@ Usar en una fecha información que entonces no se conocía. Ejemplo: el trimestr
 ### Sesgo de supervivencia (survivorship bias)
 Si hoy cogemos las 500 empresas del S&P 500 y miramos cómo les fue desde 2010, solo vemos a las que sobrevivieron y crecieron; las que quebraron o fueron expulsadas desaparecen. El resultado sale artificialmente bueno. Solución: usar en cada fecha los miembros que había *entonces*.
 
+#### Cuánto nos afecta en este proyecto
+De las empresas que estaban en el S&P 500 en 2010, solo tenemos datos de un **72 %**. En 2019 tenemos el 89 % y en 2026 el 99 %. Las que faltan son casi todas empresas que dejaron de cotizar (compradas, fusionadas o quebradas). Por tanto, cuanto más atrás miramos, más "optimista" puede salir el backtest. Esto se mide antes de fiarse de cualquier resultado.
+
 ### Universo de inversión
 Conjunto de activos entre los que la estrategia puede elegir en cada fecha. Aquí: los miembros del S&P 500 a fin de cada mes.

@@ -48,4 +48,4 @@ Contexto para retomar el trabajo (para el usuario y para Claude en futuras sesio
   (BRK, IBKR) sin capitalización; bancos/aseguradoras con métricas poco adecuadas (EV/EBITDA, margen bruto).
 - [ ] Fase 3: backtest
 - [ ] Fase 4: Google Cloud (opcional; requiere cuenta de facturación + alertas de presupuesto)
-- [ ] Subir a GitHub (lo hace el usuario: crear repo vacío y `git push`, ver GUIA.md §5)
+- [x] Publicado en https://github.com/heeriik/TrLavanda (público, MIT). Commits con email noreply de GitHub. `gh` está en C:Program FilesGitHub CLIgh.exe (la pestaña de terminal del app no completa `gh auth login`; lanzarlo en segundo plano).

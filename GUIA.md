@@ -66,6 +66,26 @@ Se abre en el navegador (http://localhost:8501). Tiene 4 pestañas:
 
 Para cerrarla: Ctrl+C en la terminal. Si cambias los datos (`trl-datos` + `trl-ranking --rebuild`), recarga la página.
 
+### Publicar la app en internet (Streamlit Community Cloud, gratis)
+
+La app lee una copia ligera de los datos (`data/app/`, ~7 MB) que **sí** se sube a GitHub. Se regenera con `uv run trl-ranking --rebuild`.
+
+1. Entra en https://share.streamlit.io e inicia sesión con tu cuenta de GitHub.
+2. **Create app** → *Deploy a public app from GitHub*:
+   - Repository: `heeriik/TrLavanda` · Branch: `main`
+   - Main file path: `src/trlavanda/app/main.py`
+   - App URL: por ejemplo `trlavanda`
+   - *Advanced settings* → Python 3.13
+3. **Deploy**. Tarda 2–3 minutos la primera vez.
+
+Para actualizar los datos de la app publicada:
+
+```powershell
+uv run trl-datos
+uv run trl-ranking --rebuild
+git add data/app; git commit -m "Datos actualizados"; git push   # la app se actualiza sola
+```
+
 ## 4b. Explorar los datos
 
 ```powershell

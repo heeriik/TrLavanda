@@ -49,6 +49,9 @@ Contexto para retomar el trabajo (para el usuario y para Claude en futuras sesio
 - [x] Interfaz web (2026-10-14): `uv run trl-app` (Streamlit, `src/trlavanda/app/main.py`, tema lavanda en
   `.streamlit/config.toml`). Se descartó heygen hyperframes: genera vídeo MP4 desde HTML, no UI interactiva
   (útil quizá para un vídeo demo). Preview en el app: `.claude/launch.json` → "trlavanda-app".
+  La app lee `data/app/` (copia ligera ~7 MB, SÍ versionada; `app/export.py`, se regenera en `trl-ranking --rebuild`)
+  para poder publicarse en Streamlit Community Cloud (entrypoint `src/trlavanda/app/main.py`, deps en
+  `src/trlavanda/app/requirements.txt`). Idea: automatizar la actualización diaria con GitHub Actions.
 - [ ] Fase 3: backtest
 - [ ] Fase 4: Google Cloud (opcional; requiere cuenta de facturación + alertas de presupuesto)
 - [x] Publicado en https://github.com/heeriik/TrLavanda (público, MIT). Commits con email noreply de GitHub. `gh` está en `C:\Program Files\GitHub CLI\gh.exe` (la pestaña de terminal del app no completa `gh auth login`; lanzarlo en segundo plano).

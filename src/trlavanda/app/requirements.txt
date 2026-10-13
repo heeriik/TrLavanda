@@ -1,0 +1,6 @@
+# Dependencias mínimas para publicar la interfaz en Streamlit Community Cloud.
+streamlit>=1.40
+altair>=5.4
+polars>=1.20
+pyarrow>=18
+python-dotenv>=1.0

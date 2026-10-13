@@ -29,6 +29,7 @@ dev = [
     "ruff>=0.6",
     "ipykernel>=6",
     "matplotlib>=3.9",
+    "gitpython>=3.2.0",
 ]
 
 [build-system]

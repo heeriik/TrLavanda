@@ -1,13 +1,19 @@
 """Interfaz web de TrLavanda. Arrancar con: uv run trl-app"""
 
+import json
+import sys
 from datetime import date
+from pathlib import Path
 
 import altair as alt
 import polars as pl
 import streamlit as st
 
-from trlavanda.config import PROCESSED_DIR, RAW_DIR
-from trlavanda.factors.screener import FACTORS, SCORES_PATH
+# En Streamlit Community Cloud el paquete no está instalado: lo importamos desde src/.
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
+from trlavanda.app.export import APP_COVERAGE, APP_PRICES, APP_SCORES  # noqa: E402
+from trlavanda.factors.screener import FACTORS  # noqa: E402
 
 st.set_page_config(page_title="TrLavanda", page_icon="🪻", layout="wide")
 
@@ -38,13 +44,13 @@ DISCLAIMER = "Herramienta de aprendizaje. No es una recomendación de inversión
 
 @st.cache_data
 def load_scores() -> pl.DataFrame:
-    return pl.read_parquet(SCORES_PATH).filter(pl.col("score").is_not_null())
+    return pl.read_parquet(APP_SCORES)
 
 
 @st.cache_data
 def load_prices(ticker: str) -> pl.DataFrame:
     return (
-        pl.scan_parquet(RAW_DIR / "prices" / "prices.parquet")
+        pl.scan_parquet(APP_PRICES)
         .filter(pl.col("ticker") == ticker)
         .select("date", "adj_close")
         .collect()
@@ -53,10 +59,7 @@ def load_prices(ticker: str) -> pl.DataFrame:
 
 @st.cache_data
 def load_coverage() -> dict:
-    import json
-
-    path = PROCESSED_DIR / "coverage_report.json"
-    return json.loads(path.read_text()) if path.exists() else {}
+    return json.loads(APP_COVERAGE.read_text()) if APP_COVERAGE.exists() else {}
 
 
 def fmt_pct(x: float | None) -> str:
@@ -65,7 +68,7 @@ def fmt_pct(x: float | None) -> str:
 
 # ---------- Barra lateral ----------
 
-if not SCORES_PATH.exists():
+if not APP_SCORES.exists():
     st.error(
         "Faltan los datos. Ejecuta primero `uv run trl-datos` y `uv run trl-ranking --rebuild`."
     )
@@ -191,7 +194,7 @@ with tab_company:
 
     left, right = st.columns(2)
     with left:
-        st.markdown("**Precio ajustado** (incluye dividendos)")
+        st.markdown("**Precio ajustado** (incluye dividendos, cierre semanal)")
         px = load_prices(ticker)
         log = st.toggle(
             "Escala logarítmica", value=True, help="Misma distancia = mismo % de subida"

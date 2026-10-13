@@ -23,3 +23,6 @@ build/
 # Sistema
 .DS_Store
 Thumbs.db
+
+# Datos de la web (se generan con trl-web y se publican en la rama gh-pages)
+web/data/

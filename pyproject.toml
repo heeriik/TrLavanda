@@ -22,6 +22,7 @@ dependencies = [
 trl-datos = "trlavanda.pipelines.download_data:main"
 trl-ranking = "trlavanda.pipelines.ranking:main"
 trl-app = "trlavanda.pipelines.app:main"
+trl-web = "trlavanda.pipelines.web:main"
 
 [dependency-groups]
 dev = [
@@ -30,6 +31,7 @@ dev = [
     "ipykernel>=6",
     "matplotlib>=3.9",
     "gitpython>=3.2.0",
+    "ghp-import>=2.1.0",
 ]
 
 [build-system]

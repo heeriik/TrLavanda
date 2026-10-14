@@ -19,6 +19,9 @@ Contexto para retomar el trabajo (para el usuario y para Claude en futuras sesio
 - Holdout: desde 2023-01-01 (`TEST_START`), no se mira al ajustar.
 - Backtest por defecto: rebalanceo mensual, top 30 equiponderado, 10 pb de coste por operación, benchmark SPY.
 - Subagentes: búsquedas y tareas simples con Haiku.
+- **Arquitectura distribuida (2026-10-14), ver `docs/ARQUITECTURA.md`:** Kafka (KRaft) como broker;
+  gateway y scheduler en Go; ingest/factors/backtest en Python; front solo HTML/CSS/JS (`web/`,
+  Streamlit se retira); contratos en JSON Schema; Docker Compose en VM Oracle Always Free + Cloudflare Tunnel.
 
 ## Notas técnicas
 - Wikipedia: miembros actuales en "List of S&P 500 companies"; el historial de cambios se movió (2026) a "Historical components of the S&P 500". `_find_table` busca las tablas por cabecera.
@@ -57,6 +60,8 @@ Contexto para retomar el trabajo (para el usuario y para Claude en futuras sesio
   versionado), publicación con `uv run trl-web --publish` (ghp-import fuerza la rama gh-pages). Inspirada en
   el estilo de las apps de bolsa (oscuro, minimal), SIN nombre/logo/marca de Trade Republic.
   El gráfico principal es el S&P 500 (SPY): la curva de la estrategia NO se muestra hasta tener backtest serio.
+- [~] Sistema distribuido (`docs/ARQUITECTURA.md`): hito 0 hecho (`be9a0e2`). **Siguiente: hito 1**
+  (retirar Streamlit, uv workspace, `contracts/`, compose con Kafka).
 - [ ] Fase 3: backtest (añadir curva estrategia vs SPY a la web cuando esté)
 - [ ] Fase 4: Google Cloud (opcional; requiere cuenta de facturación + alertas de presupuesto)
 - [x] Publicado en https://github.com/heeriik/TrLavanda (público, MIT). Commits con email noreply de GitHub. `gh` está en `C:\Program Files\GitHub CLI\gh.exe` (la pestaña de terminal del app no completa `gh auth login`; lanzarlo en segundo plano).

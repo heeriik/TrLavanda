@@ -77,6 +77,26 @@ services:
         condition: service_completed_successfully
     restart: unless-stopped
 
+  factors:
+    build:
+      context: .
+      dockerfile: services/factors/Dockerfile
+    image: trlavanda-factors
+    environment:
+      KAFKA_BOOTSTRAP: kafka:29092
+      INGEST_URL: http://ingest:8000          # de donde descarga las versiones que le faltan
+      FACTORS_PUBLIC_URL: http://factors:8000 # dirección que va dentro de los eventos
+    ports:
+      - "127.0.0.1:8002:8000"
+    volumes:
+      - factors-data:/data
+    depends_on:
+      kafka:
+        condition: service_healthy
+      topics:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
   kafka-ui:
     image: kafbat/kafka-ui:v1.3.0
     environment:
@@ -92,3 +112,4 @@ services:
 volumes:
   kafka-data:
   ingest-data:
+  factors-data:

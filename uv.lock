@@ -16,6 +16,7 @@ resolution-markers = [
 [manifest]
 members = [
     "trlavanda",
+    "trlavanda-factors",
     "trlavanda-ingest",
 ]
 
@@ -2246,6 +2247,7 @@ dev = [
     { name = "matplotlib" },
     { name = "pytest" },
     { name = "ruff" },
+    { name = "trlavanda-factors" },
     { name = "trlavanda-ingest" },
 ]
 
@@ -2275,7 +2277,27 @@ dev = [
     { name = "matplotlib", specifier = ">=3.9" },
     { name = "pytest", specifier = ">=8" },
     { name = "ruff", specifier = ">=0.6" },
+    { name = "trlavanda-factors", editable = "services/factors" },
     { name = "trlavanda-ingest", editable = "services/ingest" },
+]
+
+[[package]]
+name = "trlavanda-factors"
+version = "0.1.0"
+source = { editable = "services/factors" }
+dependencies = [
+    { name = "fastapi" },
+    { name = "httpx" },
+    { name = "trlavanda" },
+    { name = "uvicorn" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "fastapi", specifier = ">=0.115" },
+    { name = "httpx", specifier = ">=0.27" },
+    { name = "trlavanda", editable = "." },
+    { name = "uvicorn", specifier = ">=0.30" },
 ]
 
 [[package]]

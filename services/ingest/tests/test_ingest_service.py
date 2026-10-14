@@ -7,11 +7,12 @@ import polars as pl
 import pytest
 from fastapi.testclient import TestClient
 from trlavanda_ingest import api, versions
-from trlavanda_ingest.versions import KEEP, VersionStore
+from trlavanda_ingest.versions import make_store
 from trlavanda_ingest.worker import Worker
 
 from trlavanda import bus
 from trlavanda.data import edgar, ingest, prices, universe
+from trlavanda.versions import KEEP
 
 
 class FakePublisher:
@@ -100,7 +101,7 @@ def at(second: int) -> datetime:
 
 
 def test_version_inmutable_y_sin_cambios_no_crea_otra(data):
-    store = VersionStore(data / "versions")
+    store = make_store(data / "versions")
     m = store.publish("prices", now=at(0))
     assert m["version"] == "20261014T210000Z"
     assert (m["rows"], m["as_of"]) == (1, "2026-10-01")
@@ -110,12 +111,12 @@ def test_version_inmutable_y_sin_cambios_no_crea_otra(data):
 
 
 def test_edgar_junta_los_archivos_por_empresa(data):
-    m = VersionStore(data / "versions").publish("edgar", now=at(0))
+    m = make_store(data / "versions").publish("edgar", now=at(0))
     assert (m["rows"], m["as_of"]) == (2, "2026-08-02")
 
 
 def test_cambios_crean_versiones_y_se_borran_las_viejas(data):
-    store = VersionStore(data / "versions")
+    store = make_store(data / "versions")
     for i in range(KEEP + 2):
         write_prices(prices.PRICES_PATH, [100.0 + j for j in range(i + 1)])
         assert store.publish("prices", now=at(i)) is not None
@@ -125,7 +126,7 @@ def test_cambios_crean_versiones_y_se_borran_las_viejas(data):
 
 
 def test_no_sirve_archivos_fuera_del_manifiesto(data):
-    store = VersionStore(data / "versions")
+    store = make_store(data / "versions")
     v = store.publish("prices", now=at(0))["version"]
     assert store.file_path("prices", v, "prices.parquet").exists()
     assert store.file_path("prices", v, "../LATEST") is None
@@ -143,7 +144,7 @@ def test_worker_versiona_y_anuncia_en_orden(data):
     pub, calls = FakePublisher(), []
     worker = Worker(
         pub,
-        VersionStore(data / "versions"),
+        make_store(data / "versions"),
         "http://ingest:8000/",
         steps=lambda ds, full, st: calls.append(ds),
     )
@@ -160,9 +161,7 @@ def test_worker_versiona_y_anuncia_en_orden(data):
 
 def test_worker_idempotente(data):
     pub = FakePublisher()
-    worker = Worker(
-        pub, VersionStore(data / "versions"), "http://ingest:8000", steps=lambda *a: None
-    )
+    worker = Worker(pub, make_store(data / "versions"), "http://ingest:8000", steps=lambda *a: None)
     assert len(worker.handle(cmd("r1", ["prices"]))) == 1
     assert worker.handle(cmd("r1", ["prices"])) == []  # mismo run_id: se ignora
     assert pub.of("jobs.status")[-1]["data"]["state"] == "skipped"
@@ -175,7 +174,7 @@ def test_worker_error_no_marca_el_run(data):
         raise RuntimeError("SEC caída")
 
     pub = FakePublisher()
-    worker = Worker(pub, VersionStore(data / "versions"), "http://ingest:8000", steps=falla)
+    worker = Worker(pub, make_store(data / "versions"), "http://ingest:8000", steps=falla)
     with pytest.raises(RuntimeError):
         worker.handle(cmd("r1", ["prices"]))
     assert pub.of("jobs.status")[-1]["data"]["state"] == "failed"
@@ -187,7 +186,7 @@ def test_worker_error_no_marca_el_run(data):
 
 def test_api_sirve_versiones(data, monkeypatch):
     monkeypatch.setenv("INGEST_CONSUMER", "0")
-    store = VersionStore(data / "versions")
+    store = make_store(data / "versions")
     monkeypatch.setattr(api, "store", store)
     v = store.publish("prices", now=at(0))["version"]
 

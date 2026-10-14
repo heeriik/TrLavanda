@@ -6,6 +6,9 @@ fecha, usamos SOLO información disponible entonces:
 - fundamentales con fecha de publicación <= esa fecha.
 """
 
+from dataclasses import dataclass
+from pathlib import Path
+
 import polars as pl
 
 from trlavanda.config import PROCESSED_DIR, RAW_DIR
@@ -24,6 +27,21 @@ MIN_SECTOR_SIZE = 5  # con menos empresas, el sector se compara con todo el univ
 MAX_STALENESS_DAYS = 400  # ignoramos fundamentales de periodos acabados hace > 400 días
 
 SCORES_PATH = PROCESSED_DIR / "factor_scores.parquet"
+
+
+@dataclass(frozen=True)
+class Inputs:
+    """Archivos de entrada del cálculo. Por defecto, los de la carpeta de datos local; el
+    servicio factors pasa los de las versiones que ha descargado de ingest."""
+
+    membership: Path = PROCESSED_DIR / "sp500_membership.parquet"
+    prices: Path = RAW_DIR / "prices" / "prices.parquet"
+    ticker_cik: Path = PROCESSED_DIR / "ticker_cik.parquet"
+    company_meta: Path = RAW_DIR / "edgar" / "company_meta.parquet"
+    fundamentals: Path = PROCESSED_DIR / "fundamentals_pit.parquet"
+
+
+LOCAL = Inputs()  # los archivos de data/ (lo que usan trl-ranking y trl-update)
 
 
 def _ym(col: str = "date") -> pl.Expr:
@@ -55,15 +73,10 @@ def monthly_prices(prices: pl.DataFrame) -> pl.DataFrame:
     )
 
 
-def build_grid() -> pl.DataFrame:
+def build_grid(inp: Inputs = LOCAL) -> pl.DataFrame:
     """(fecha, ticker, cik, nombre, sector) de los miembros del índice en cada fecha."""
-    membership = pl.read_parquet(PROCESSED_DIR / "sp500_membership.parquet")
-    prices_last = (
-        pl.scan_parquet(RAW_DIR / "prices" / "prices.parquet")
-        .select(pl.col("date").max())
-        .collect()
-        .item()
-    )
+    membership = pl.read_parquet(inp.membership)
+    prices_last = pl.scan_parquet(inp.prices).select(pl.col("date").max()).collect().item()
 
     # Añadimos "hoy" (última fecha con precios) con los miembros del último mes.
     last = membership["date"].max()
@@ -77,8 +90,8 @@ def build_grid() -> pl.DataFrame:
             ]
         )
 
-    ciks = pl.read_parquet(PROCESSED_DIR / "ticker_cik.parquet")
-    meta = pl.read_parquet(RAW_DIR / "edgar" / "company_meta.parquet").with_columns(
+    ciks = pl.read_parquet(inp.ticker_cik)
+    meta = pl.read_parquet(inp.company_meta).with_columns(
         pl.col("sic").map_elements(sic_to_sector, return_dtype=pl.Utf8).alias("sector")
     )
     return (
@@ -192,13 +205,14 @@ def score(df: pl.DataFrame) -> pl.DataFrame:
     )
 
 
-def build_scores() -> pl.DataFrame:
-    prices = pl.read_parquet(RAW_DIR / "prices" / "prices.parquet")
-    fund = pl.read_parquet(PROCESSED_DIR / "fundamentals_pit.parquet")
+def build_scores(inp: Inputs = LOCAL, out: Path = SCORES_PATH) -> pl.DataFrame:
+    prices = pl.read_parquet(inp.prices)
+    fund = pl.read_parquet(inp.fundamentals)
 
-    grid = build_grid().with_columns(_ym().alias("ym"))
+    grid = build_grid(inp).with_columns(_ym().alias("ym"))
     df = grid.join(monthly_prices(prices), on=["ticker", "ym"], how="left").drop("ym")
     df = attach_fundamentals(df, fund)
     df = score(compute_metrics(df))
-    df.write_parquet(SCORES_PATH)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    df.write_parquet(out)
     return df

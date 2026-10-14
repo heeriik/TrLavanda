@@ -55,7 +55,7 @@ Reglas:
 |---|---|---|---|---|---|
 | **scheduler** | Go | — | `cmd.ingest` (cron diario) | `/healthz` | — |
 | **ingest** | Python | `cmd.ingest` | `data.updated` | `GET /datasets`, `/datasets/{name}/latest`, `/datasets/{name}/versions/{v}[/files/{f}]`, `/healthz` | universo, precios, EDGAR |
-| **factors** | Python | `data.updated` | `scores.published` | `GET /scores/versions/{v}` (Parquet), `/healthz` | fundamentales PIT, scores |
+| **factors** | Python | `data.updated` | `scores.published` | `GET /datasets/scores/...` (mismos endpoints que ingest), `/healthz` | fundamentales PIT, scores |
 | **gateway** | Go | `scores.published`, `data.updated` (precios) | — | La API actual de la web (`/api/meta`, `/api/ranking`, `/api/companies/...`) | caché en memoria |
 | **backtest** (fase 3) | Python | `scores.published` | `backtest.completed` | `POST /backtests`, `GET /backtests/{id}` | resultados |
 
@@ -120,6 +120,17 @@ pyproject.toml            paquete core + uv workspace (members: services/*)
 Se guardan las 3 últimas versiones de cada uno. Si una ingesta no cambia nada, no hay versión ni evento.
 Un `run_id` ya procesado se ignora (`jobs.status` = `skipped`).
 
+## Factors: debounce y recuperación
+
+Una ingesta completa emite 3 `data.updated` seguidos. factors **apunta** cada uno (en su `state.json`, antes
+de confirmarlo a Kafka) y calcula cuando pasan 15 s sin eventos nuevos: un cálculo por tanda, nunca con
+datos a medias. Si se cae con trabajo pendiente, al volver lo encuentra apuntado. Si las versiones de
+entrada son las del último cálculo, no repite. Si un dataset no aparece en el topic (eventos caducados),
+pregunta a ingest por `/datasets/{name}/latest`.
+
+El almacén de versiones, sus endpoints y la descarga verificada son comunes (`trlavanda.versions`,
+`trlavanda.versions_api`); el screener recibe sus archivos de entrada como parámetro (`screener.Inputs`).
+
 ## Hitos
 
 | # | Hito | Hecho cuando |
@@ -127,7 +138,7 @@ Un `run_id` ya procesado se ignora (`jobs.status` = `skipped`).
 | 0 | ✅ Commit del trabajo pendiente (API FastAPI, `trl-update`, web modular) | `be9a0e2` |
 | 1 | Retirar Streamlit, `contracts/` (JSON Schema + topics), `trlavanda.bus`, imagen Python, compose con Kafka + Kafka UI. El core se queda en `src/trlavanda` (moverlo no aportaba nada) | `docker compose up kafka` funciona; los tests siguen pasando |
 | 2 | ✅ Servicio **ingest** (`services/ingest`): consume `cmd.ingest`, versiona (`versions/<dataset>/<v>/` + `LATEST`), publica `data.updated` y sirve los archivos por HTTP (:8001 desde el PC) | Probado de punta a punta el 2026-10-14, incluido un reinicio a mitad de trabajo |
-| 3 | Servicio **factors** | Tras el paso 2 aparece `scores.published` sin intervención |
+| 3 | ✅ Servicio **factors** (`services/factors`): consume `data.updated` con *debounce*, descarga las versiones de ingest por HTTP (verificando sha256), calcula y publica `scores.published` (:8002 desde el PC) | Probado el 2026-10-14: 3 eventos → 1 cálculo; ranking idéntico al del prototipo |
 | 4 | **gateway en Go** con paridad respecto a la FastAPI (tests "golden" con las mismas fixtures sintéticas de `tests/test_api.py`); la web apunta a él; se borra `src/trlavanda/api` | La web local funciona contra el gateway Go |
 | 5 | **scheduler** Go + resiliencia (reintentos con backoff, DLQ, idempotencia) + logs JSON con `correlation_id` + `/healthz` | Matar un servicio a mitad no corrompe datos y al volver se recupera solo |
 | 6 | **Despliegue**: imágenes multi-arquitectura (`docker buildx`, arm64), VM Oracle, Cloudflare Tunnel, `PROD_API_BASE` en la web | https://heeriik.github.io/TrLavanda/ muestra datos del sistema desplegado |

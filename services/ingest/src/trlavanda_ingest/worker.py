@@ -10,7 +10,8 @@ import time
 
 from trlavanda.bus import Publisher
 from trlavanda.data import ingest
-from trlavanda_ingest.versions import DATASETS, VersionStore
+from trlavanda.versions import VersionStore
+from trlavanda_ingest.versions import DATASETS
 
 log = logging.getLogger(__name__)
 

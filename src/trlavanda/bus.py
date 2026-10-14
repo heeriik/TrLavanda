@@ -152,6 +152,7 @@ def consume(
     from_beginning: bool = True,
     raw: bool = False,
     config: dict | None = None,
+    on_idle: Callable[[], None] | None = None,
 ) -> None:
     """Bucle de consumo. Llama a `handler(evento)` y confirma el mensaje después.
 
@@ -159,6 +160,8 @@ def consume(
     reiniciar el servicio, el mensaje se vuelve a recibir. (Reintentos con espera: hito 5.)
     Con `raw=True` no se valida y `handler` recibe el texto tal cual (para inspeccionar DLQs).
     `config`: opciones extra de librdkafka (p. ej. `max.poll.interval.ms` para trabajos largos).
+    `on_idle`: se llama cada vez que pasa 1 s sin mensajes (para trabajos que esperan a que
+    lleguen todos los eventos de una tanda antes de empezar).
     """
     consumer = Consumer(
         {
@@ -175,6 +178,8 @@ def consume(
         while not stop():
             msg = consumer.poll(1.0)
             if msg is None:
+                if on_idle:
+                    on_idle()
                 continue
             if msg.error():
                 if msg.error().retriable():

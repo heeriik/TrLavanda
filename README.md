@@ -78,7 +78,7 @@ src/trlavanda/
   api/         API FastAPI (referencia del futuro gateway en Go)
   bus.py       eventos sobre Kafka (validados con contracts/)
   pipelines/   trl-datos · trl-ranking · trl-update · trl-api · trl-bus · trl-web
-services/      servicios del sistema distribuido (ingest: descarga, versiona y anuncia los datos)
+services/      servicios del sistema distribuido: ingest (descarga y versiona los datos), factors (calcula el ranking)
 tests/         pytest
 contracts/     JSON Schema de los eventos y lista de topics de Kafka
 web/           interfaz HTML/CSS/JS

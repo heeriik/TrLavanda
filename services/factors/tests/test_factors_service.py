@@ -8,6 +8,7 @@ from trlavanda_factors.api import make_store
 from trlavanda_factors.worker import Worker
 
 from trlavanda import bus
+from trlavanda.factors.screener import METHOD_VERSION
 
 
 class FakePublisher:
@@ -109,7 +110,7 @@ def test_debounce_un_solo_calculo_por_tanda(env):
     assert ev["data"]["as_of"] == "2026-10-13"
     assert ev["data"]["inputs"] == dict.fromkeys(
         ("universe", "edgar", "prices"), "20261014T090000Z"
-    )
+    ) | {"method": str(METHOD_VERSION)}
     assert ev["data"]["url"].startswith("http://factors:8000/datasets/scores/versions/")
     assert ev["correlation_id"] == "run-1"  # la cadena de la ingesta continúa
 
@@ -168,3 +169,16 @@ def test_error_deja_pendiente_y_avisa(env, tmp_path):
         w.on_idle()
     assert pub.of("jobs.status")[-1]["data"]["state"] == "failed"
     assert make_worker().state["pending"] is True  # al reiniciar se reintentará
+
+
+def test_nuevo_metodo_recalcula_al_arrancar(env):
+    make_worker, pub, clock, calls = env
+    w = make_worker()
+    for ds in ("universe", "edgar", "prices"):
+        w.on_event(updated(ds, "20261014T090000Z"))
+    clock.t += 20
+    w.on_idle()
+    w.state["computed_inputs"]["method"] = "0"  # como si el último cálculo fuera de otro método
+    w._save()
+    make_worker().on_idle()  # al arrancar con el método nuevo, recalcula sin esperar eventos
+    assert calls["compute"] == 2

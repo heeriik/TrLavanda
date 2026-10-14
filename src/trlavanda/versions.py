@@ -24,7 +24,7 @@ import os
 import shutil
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import httpx
@@ -92,7 +92,10 @@ class VersionStore:
         """
         spec = self.datasets[dataset]
         base = self._dir(dataset)
-        version = (now or datetime.now(UTC)).strftime(VERSION_FMT)
+        now = now or datetime.now(UTC)
+        while (base / now.strftime(VERSION_FMT)).exists():  # dos versiones en el mismo segundo
+            now += timedelta(seconds=1)
+        version = now.strftime(VERSION_FMT)
         tmp = base / f".tmp-{version}"
         shutil.rmtree(tmp, ignore_errors=True)
         tmp.mkdir(parents=True)

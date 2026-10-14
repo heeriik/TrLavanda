@@ -64,6 +64,17 @@ La media y la desviación típica son muy sensibles a los valores extremos (*out
 
 - El **percentil p** es el valor que deja por debajo el p % de los datos. La mediana es el percentil 50.
 
+### Cuando la desviación típica es 0 (y por qué NaN no es lo mismo que "sin dato")
+Si en un grupo todas las empresas tienen el mismo valor (p. ej. en 2010 casi todos los REIT tenían
+deuda/activos = 0 porque EDGAR no tenía ese dato), la desviación típica es 0 y el z-score sería
+`0 / 0`. En coma flotante eso da **NaN** (*Not a Number*), que es distinto de un nulo:
+- un **nulo** significa "no hay dato" y las medias lo ignoran;
+- un **NaN** contamina todo lo que toca (`media(1, NaN) = NaN`) y, al ordenar, Polars lo pone
+  por encima de cualquier número.
+
+Por eso 9 REIT aparecían en los puestos 1–9 del ranking en tres meses de 2010. Corrección: si la
+desviación típica es 0, la métrica no distingue a nadie y su z-score es nulo (`METHOD_VERSION = 2`).
+
 ### Score compuesto
 1. Score de cada factor = media de los z-scores de sus métricas disponibles.
 2. Score total = media de los 4 factores, con pesos iguales. Solo se calcula si hay al menos 3 factores con dato.

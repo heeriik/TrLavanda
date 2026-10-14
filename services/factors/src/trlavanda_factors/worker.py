@@ -6,7 +6,8 @@ Por eso cada evento solo se APUNTA (en disco, antes de confirmarlo a Kafka) y el
 empieza cuando pasan DEBOUNCE_S segundos sin eventos nuevos.
 
 Si el servicio se cae con trabajo pendiente, al volver lo encuentra apuntado y lo hace.
-Idempotencia: si las versiones de entrada son las mismas que las del último cálculo, no se repite.
+Idempotencia: si las versiones de entrada Y la versión del método (screener.METHOD_VERSION) son
+las del último cálculo, no se repite. Si cambia el código del cálculo, se recalcula al arrancar.
 """
 
 import json
@@ -19,6 +20,7 @@ import httpx
 import polars as pl
 
 from trlavanda.bus import Publisher
+from trlavanda.factors.screener import METHOD_VERSION
 from trlavanda.versions import VersionStore, fetch_version, prune_local
 from trlavanda_factors.compute import REQUIRED, compute_scores
 
@@ -56,6 +58,10 @@ class Worker:
         self.state_path = data_dir / "state.json"
         self.state = self._load()
         self._last_event = 0.0  # tras un reinicio, lo pendiente se hace en cuanto haya calma
+        done = self.state["computed_inputs"]
+        if done and done.get("method") != str(METHOD_VERSION):
+            log.info("Nueva versión del método (%s): se recalculará", METHOD_VERSION)
+            self.state["pending"] = True
 
     # ---------- estado persistente ----------
 
@@ -118,11 +124,11 @@ class Worker:
                     return None
                 inputs[ds] = {"version": url.rsplit("/", 1)[1], "url": url}
 
-        versions = {ds: inputs[ds]["version"] for ds in REQUIRED}
+        versions = {ds: inputs[ds]["version"] for ds in REQUIRED} | {"method": str(METHOD_VERSION)}
         if versions == self.state["computed_inputs"]:
             self.state["pending"] = False
             self._save()
-            self.status("skipped", detail="mismas versiones de entrada que el último cálculo")
+            self.status("skipped", detail="mismas entradas y método que el último cálculo")
             return None
 
         self.status("started", detail=json.dumps(versions))

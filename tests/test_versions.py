@@ -71,3 +71,11 @@ def test_prune_local(tmp_path):
         (tmp_path / "demo" / v).mkdir(parents=True)
     prune_local(tmp_path / "demo", keep={"v3"})
     assert [p.name for p in (tmp_path / "demo").iterdir()] == ["v3"]
+
+
+def test_dos_versiones_en_el_mismo_segundo(store, tmp_path):
+    a = store.publish("demo", now=NOW)["version"]
+    (tmp_path / "src" / "extra.json").write_text("{}")  # cambia el contenido
+    b = store.publish("demo", now=NOW)["version"]
+    assert (a, b) == ("20261014T210000Z", "20261014T210001Z")
+    assert store.latest("demo") == b

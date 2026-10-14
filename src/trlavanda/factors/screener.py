@@ -28,6 +28,12 @@ MAX_STALENESS_DAYS = 400  # ignoramos fundamentales de periodos acabados hace > 
 
 SCORES_PATH = PROCESSED_DIR / "factor_scores.parquet"
 
+# Versión del MÉTODO de cálculo. Subirla cuando un cambio de código altere los resultados: el
+# servicio factors la usa (junto con las versiones de los datos) para saber si debe recalcular.
+#   1: versión inicial
+#   2: z-score nulo (no NaN) si la desviación típica es 0 (todos los valores iguales)
+METHOD_VERSION = 2
+
 
 @dataclass(frozen=True)
 class Inputs:
@@ -181,7 +187,10 @@ def sector_zscore(df: pl.DataFrame, metric: str, sign: int) -> pl.Expr:
         lo = x.quantile(WINSOR).over(over)
         hi = x.quantile(1 - WINSOR).over(over)
         w = x.clip(lo, hi)
-        return (w - w.mean().over(over)) / w.std().over(over)
+        std = w.std().over(over)
+        # Si todos los valores son iguales (std = 0) la métrica no distingue a nadie: z nulo.
+        # Sin esto saldría 0/0 = NaN, y Polars ordena NaN como el número más alto (puesto 1).
+        return pl.when(std > 0).then((w - w.mean().over(over)) / std)
 
     n_sector = x.count().over("date", "sector")
     zs = pl.when(n_sector >= MIN_SECTOR_SIZE).then(z(["date", "sector"])).otherwise(z(["date"]))

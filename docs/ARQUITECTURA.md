@@ -95,8 +95,10 @@ Los esquemas viven en `contracts/events/*.schema.json`. Cambio incompatible → 
 ```
 contracts/                JSON Schema de eventos y de la API pública
 services/
-  gateway/                Go   (go.work une los módulos Go)
+  gateway/                Go
   scheduler/              Go
+libs/go/                  Go compartido: contratos (validación) y construcción de eventos
+go.work                   une los módulos Go (cada uno compila también solo, con `replace`)
   ingest/                 Python
   factors/                Python
   backtest/               Python (fase 3)
@@ -146,6 +148,18 @@ El almacén de versiones, sus endpoints y la descarga verificada son comunes (`t
 - **Modo local**: `go run ./services/gateway/cmd/gateway -local data` sirve la carpeta `data/` sin Kafka.
 - Imagen de 65 MB (binario estático); las de Python pesan 1,35 GB.
 
+## Scheduler y robustez
+
+- **Scheduler (Go)**: publica `cmd.ingest` a las 22:30 UTC de lunes a viernes. El `run_id` es determinista
+  (`daily-AAAA-MM-DD`) y al arrancar publica la última franja vencida: no guarda estado, porque ingest ignora
+  los `run_id` repetidos (la idempotencia está en quien recibe).
+- **Reintentos**: un fallo del trabajo (no de Kafka) se reintenta con espera creciente; si sigue fallando, el
+  mensaje va a `<topic>.dlq` con el error y el nº de intentos en las cabeceras, y el servicio sigue con lo
+  siguiente (antes: el proceso moría y Docker lo reiniciaba en bucle). `uv run trl-bus tail cmd.ingest.dlq`.
+- **Trazabilidad**: todos los logs son JSON y llevan el `correlation_id` de la ejecución (Python: ContextVar
+  que fija el bus; Go: campo explícito). `docker compose logs | grep daily-2026-10-14` muestra la cadena entera.
+- **Salud**: `/healthz` (vivo) y `/readyz` (listo: consumidor en marcha / datos cargados) en todos los servicios.
+
 ## Hitos
 
 | # | Hito | Hecho cuando |
@@ -155,7 +169,7 @@ El almacén de versiones, sus endpoints y la descarga verificada son comunes (`t
 | 2 | ✅ Servicio **ingest** (`services/ingest`): consume `cmd.ingest`, versiona (`versions/<dataset>/<v>/` + `LATEST`), publica `data.updated` y sirve los archivos por HTTP (:8001 desde el PC) | Probado de punta a punta el 2026-10-14, incluido un reinicio a mitad de trabajo |
 | 3 | ✅ Servicio **factors** (`services/factors`): consume `data.updated` con *debounce*, descarga las versiones de ingest por HTTP (verificando sha256), calcula y publica `scores.published` (:8002 desde el PC) | Probado el 2026-10-14: 3 eventos → 1 cálculo; ranking idéntico al del prototipo |
 | 4 | ✅ **gateway en Go** (`services/gateway`): carga por HTTP, se mantiene al día con Kafka y revisión cada 5 min; paridad con la FastAPI comprobada (32 respuestas golden + 381 URLs con datos reales, 0 diferencias); FastAPI retirada | La web local funciona contra el gateway (2026-10-14) |
-| 5 | **scheduler** Go + resiliencia (reintentos con backoff, DLQ, idempotencia) + logs JSON con `correlation_id` + `/healthz` | Matar un servicio a mitad no corrompe datos y al volver se recupera solo |
+| 5 | ✅ **scheduler** Go (`services/scheduler`) + reintentos con backoff y DLQ (ingest: 60 s/4 min; factors: 60 s/4 min/16 min) + logs JSON con `correlation_id` + `/readyz`; módulo Go compartido `libs/go` (contratos y eventos) | Probado el 2026-10-14: cadena scheduler→web sola en 1 min 40 s; `docker kill` a mitad de ingesta: se recupera sin corromper nada |
 | 6 | **Despliegue**: imágenes multi-arquitectura (`docker buildx`, arm64), VM Oracle, Cloudflare Tunnel, `PROD_API_BASE` en la web | https://heeriik.github.io/TrLavanda/ muestra datos del sistema desplegado |
 | 7 | Servicio **backtest** (fase 3) y curva estrategia vs SPY en la web | — |
 

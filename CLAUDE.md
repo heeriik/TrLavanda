@@ -58,7 +58,7 @@ Contexto para retomar el trabajo (para el usuario y para Claude en futuras sesio
   versionado), publicación con `uv run trl-web --publish` (ghp-import fuerza la rama gh-pages). Inspirada en
   el estilo de las apps de bolsa (oscuro, minimal), SIN nombre/logo/marca de Trade Republic.
   El gráfico principal es el S&P 500 (SPY): la curva de la estrategia NO se muestra hasta tener backtest serio.
-- [~] Sistema distribuido (`docs/ARQUITECTURA.md`): hitos 0 a 4 hechos (2026-10-14). `docker compose up -d` levanta
+- [~] Sistema distribuido (`docs/ARQUITECTURA.md`): hitos 0 a 5 hechos (2026-10-14). `docker compose up -d` levanta
   Kafka 4.1 (KRaft) + topics (desde `contracts/topics.json`) + Kafka UI (:8080); `trlavanda.bus` + `trl-bus`.
   Servicio ingest en `services/ingest` (miembro del uv workspace; :8001; volumen propio `ingest-data`, sembrado
   desde `data/`). Los pasos de ingesta están en `trlavanda/data/ingest.py` (los usa también `trl-datos`).
@@ -68,8 +68,11 @@ Contexto para retomar el trabajo (para el usuario y para Claude en futuras sesio
   Gateway Go en `services/gateway` (:8000, la API de la web; FastAPI retirada). Paridad: `testdata/golden.json`
   (regenerar requiere `git checkout e9549b5 -- src/trlavanda/api`). Factores/etiquetas en `contracts/factors.json`
   (test en Python comprueba que coincide con `screener.FACTORS`). `go test ./...` desde `services/gateway`.
-  **Siguiente: hito 5** (scheduler Go + reintentos con backoff, DLQ en factors/ingest, logs JSON con
-  correlation_id en Python, `/readyz`). Pendiente: imágenes Python de 1,35 GB → aligerar por servicio.
+  Scheduler Go (`services/scheduler`, 22:30 UTC L-V, run_id `daily-AAAA-MM-DD`). Go compartido en `libs/go`
+  (contracts + events) con `replace` en cada go.mod; tras cambiar deps: `GOWORK=off go mod tidy` en cada módulo
+  (Docker compila sin go.work). Reintentos + DLQ en `bus.consume(retries, backoff_s)` y en factors.on_idle.
+  Logs JSON: `trlavanda.logs.setup(servicio)`. **Siguiente: hito 6** (despliegue: buildx arm64, VM Oracle
+  Always Free, Cloudflare Tunnel —falta decidir dominio—, `PROD_API_BASE`). Pendiente: imágenes Python 1,35 GB.
 - [ ] Fase 3: backtest (añadir curva estrategia vs SPY a la web cuando esté)
 - [ ] Fase 4: Google Cloud (opcional; requiere cuenta de facturación + alertas de presupuesto)
 - [x] Publicado en https://github.com/heeriik/TrLavanda (público, MIT). Commits con email noreply de GitHub. `gh` está en `C:\Program Files\GitHub CLI\gh.exe` (la pestaña de terminal del app no completa `gh auth login`; lanzarlo en segundo plano).

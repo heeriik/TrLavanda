@@ -59,7 +59,7 @@ uv sync                          # entorno e instalación
 cp .env.example .env             # pon un email de contacto en SEC_USER_AGENT (lo exige la SEC)
 uv run trl-datos                 # descarga (~10 min la primera vez)
 uv run trl-ranking               # ranking actual en la terminal
-docker compose up -d             # sistema completo: Kafka, ingest, factors, gateway (API :8000), Kafka UI (:8080)
+docker compose up -d             # sistema completo: Kafka, ingest, factors, gateway (API :8000), scheduler, Kafka UI (:8080)
 uv run trl-ranking --date 2020-03-31 --sector "Health Care"
 uv run pytest
 ```
@@ -77,7 +77,8 @@ src/trlavanda/
   bus.py       eventos sobre Kafka (validados con contracts/)
   versions.py  versiones inmutables de datasets (guardar, servir, descargar)
   pipelines/   trl-datos · trl-ranking · trl-update · trl-bus · trl-web
-services/      servicios: ingest y factors (Python), gateway (Go: la API de la web)
+services/      servicios: ingest y factors (Python), gateway (Go: API de la web), scheduler (Go: cron diario)
+libs/go/       Go compartido: contratos y eventos
 tests/         pytest
 contracts/     JSON Schema de los eventos y lista de topics de Kafka
 web/           interfaz HTML/CSS/JS

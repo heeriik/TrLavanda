@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trlavanda/contracts/events/envelope.schema.json",
+  "title": "Sobre común de todos los eventos",
+  "description": "Inspirado en CloudEvents. El contenido propio de cada tipo va en `data` y se valida con <type>.schema.json.",
+  "type": "object",
+  "required": ["id", "type", "schema_version", "occurred_at", "source", "correlation_id", "data"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "format": "uuid", "description": "Único por mensaje: sirve para deduplicar." },
+    "type": { "enum": ["cmd.ingest", "data.updated", "scores.published", "jobs.status"] },
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "occurred_at": { "type": "string", "format": "date-time" },
+    "source": { "type": "string", "description": "Servicio que lo emite (scheduler, ingest, factors...)." },
+    "correlation_id": { "type": "string", "description": "El mismo en toda la cadena de una ejecución." },
+    "data": { "type": "object" }
+  }
+}

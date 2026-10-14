@@ -1,0 +1,73 @@
+# Sistema TrLavanda en local (y, con pocos cambios, en el servidor).
+#
+#   docker compose up -d            arranca Kafka, crea los topics y abre Kafka UI
+#   docker compose ps               estado de cada contenedor
+#   docker compose logs -f kafka    logs
+#   docker compose down             parar (los datos se conservan en los volúmenes)
+#   docker compose down -v          parar y BORRAR los datos de Kafka
+#
+# Kafka UI: http://localhost:8080   (topics, mensajes, grupos de consumidores)
+# Desde el PC, los programas Python se conectan a 127.0.0.1:9092; dentro de Docker, a kafka:29092.
+
+name: trlavanda
+
+services:
+  kafka:
+    image: apache/kafka:4.1.0
+    environment:
+      # Modo KRaft: este único nodo es a la vez broker y controlador (no hace falta ZooKeeper).
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      # Dos "puertas": INTERNAL para los contenedores, EXTERNAL para el PC.
+      KAFKA_LISTENERS: INTERNAL://:29092,EXTERNAL://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092,EXTERNAL://127.0.0.1:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      # Un solo nodo: no hay réplicas.
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      # Los topics se crean desde contracts/topics.json (servicio topics), no al vuelo por error.
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_HEAP_OPTS: -Xms256m -Xmx512m
+    ports:
+      - "127.0.0.1:9092:9092"  # solo accesible desde este ordenador
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server kafka:29092 > /dev/null 2>&1"]
+      interval: 15s
+      timeout: 15s
+      start_period: 20s
+      retries: 10
+    restart: unless-stopped
+
+  # Tarea de un solo uso: crea los topics que falten y termina.
+  topics:
+    build: .
+    image: trlavanda-python
+    command: ["trl-bus", "init"]
+    environment:
+      KAFKA_BOOTSTRAP: kafka:29092
+    depends_on:
+      kafka:
+        condition: service_healthy
+    restart: "no"
+
+  kafka-ui:
+    image: kafbat/kafka-ui:v1.3.0
+    environment:
+      KAFKA_CLUSTERS_0_NAME: trlavanda
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  kafka-data:

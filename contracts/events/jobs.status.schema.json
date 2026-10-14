@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trlavanda/contracts/events/jobs.status.schema.json",
+  "title": "jobs.status: progreso de un trabajo",
+  "description": "Topic jobs.status, clave = service. Todos los servicios lo publican; sirve para seguir una ejecución de punta a punta.",
+  "type": "object",
+  "required": ["service", "job", "state"],
+  "additionalProperties": false,
+  "properties": {
+    "service": { "type": "string" },
+    "job": { "type": "string", "description": "Qué trabajo, p. ej. ingest:prices." },
+    "state": { "enum": ["started", "succeeded", "failed", "skipped"] },
+    "detail": { "type": "string" },
+    "duration_s": { "type": "number", "minimum": 0 }
+  }
+}

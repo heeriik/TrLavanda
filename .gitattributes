@@ -1,0 +1,3 @@
+# Los scripts de shell y los Dockerfile se ejecutan en Linux: siempre con saltos de línea LF.
+*.sh text eol=lf
+Dockerfile text eol=lf

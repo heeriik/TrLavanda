@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trlavanda/contracts/events/cmd.ingest.schema.json",
+  "title": "cmd.ingest: orden de descargar datos",
+  "description": "Topic cmd.ingest, clave = run_id. Lo publica el scheduler (o una persona a mano); lo consume ingest.",
+  "type": "object",
+  "required": ["run_id", "datasets"],
+  "additionalProperties": false,
+  "properties": {
+    "run_id": { "type": "string" },
+    "datasets": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "enum": ["universe", "prices", "edgar"] }
+    },
+    "full": { "type": "boolean", "default": false, "description": "true = descargar desde cero en vez de incremental." }
+  }
+}

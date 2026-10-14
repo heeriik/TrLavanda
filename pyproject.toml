@@ -14,19 +14,19 @@ dependencies = [
     "python-dotenv>=1.0",
     "statsmodels>=0.14",
     "tqdm>=4.66",
-    "streamlit>=1.40",
-    "altair>=5.4",
     "fastapi>=0.115",
     "uvicorn>=0.30",
+    "confluent-kafka>=2.16",
+    "jsonschema>=4.23",
 ]
 
 [project.scripts]
 trl-datos = "trlavanda.pipelines.download_data:main"
 trl-ranking = "trlavanda.pipelines.ranking:main"
-trl-app = "trlavanda.pipelines.app:main"
 trl-web = "trlavanda.pipelines.web:main"
 trl-api = "trlavanda.pipelines.api:main"
 trl-update = "trlavanda.pipelines.update:main"
+trl-bus = "trlavanda.bus:main"
 
 [dependency-groups]
 dev = [
@@ -49,6 +49,7 @@ packages = ["src/trlavanda"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+markers = ["kafka: necesita Kafka arrancado (docker compose up -d); se salta si no está"]
 
 [tool.ruff]
 line-length = 100

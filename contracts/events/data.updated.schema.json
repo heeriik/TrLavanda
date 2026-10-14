@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trlavanda/contracts/events/data.updated.schema.json",
+  "title": "data.updated: hay una versión nueva de un dataset",
+  "description": "Topic data.updated, clave = dataset. Lo publica ingest; lo consumen factors y gateway. Lleva un puntero (url), no los datos.",
+  "type": "object",
+  "required": ["dataset", "version", "as_of", "rows", "url"],
+  "additionalProperties": false,
+  "properties": {
+    "dataset": { "enum": ["universe", "prices", "edgar"] },
+    "version": { "type": "string", "pattern": "^[0-9]{8}T[0-9]{6}Z$", "description": "Id inmutable, p. ej. 20261014T213000Z." },
+    "as_of": { "type": "string", "format": "date", "description": "Último día que cubren los datos." },
+    "rows": { "type": "integer", "minimum": 0 },
+    "url": { "type": "string", "format": "uri", "description": "Dónde pedir esta versión al servicio dueño." }
+  }
+}

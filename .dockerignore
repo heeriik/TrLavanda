@@ -1,0 +1,14 @@
+# Solo entra en la imagen lo que copia el Dockerfile: lo demás pesa y puede tener secretos.
+.git
+.venv
+.env
+.claude
+.pytest_cache
+.ruff_cache
+**/__pycache__
+data
+web
+notebooks
+docs
+prompts
+tests

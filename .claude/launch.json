@@ -4,20 +4,27 @@
     {
       "name": "trlavanda-api",
       "runtimeExecutable": "uv",
-      "runtimeArgs": ["run", "trl-api", "--port", "8000"],
+      "runtimeArgs": [
+        "run",
+        "trl-api",
+        "--port",
+        "8000"
+      ],
       "port": 8000
     },
     {
       "name": "trlavanda-web",
       "runtimeExecutable": "uv",
-      "runtimeArgs": ["run", "python", "-m", "http.server", "8600", "--directory", "web"],
+      "runtimeArgs": [
+        "run",
+        "python",
+        "-m",
+        "http.server",
+        "8600",
+        "--directory",
+        "web"
+      ],
       "port": 8600
-    },
-    {
-      "name": "trlavanda-app",
-      "runtimeExecutable": "uv",
-      "runtimeArgs": ["run", "trl-app", "--server.port", "8501"],
-      "port": 8501
     }
   ]
 }

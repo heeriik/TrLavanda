@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trlavanda/contracts/events/scores.published.schema.json",
+  "title": "scores.published: hay un ranking nuevo",
+  "description": "Topic scores.published, clave = \"scores\". Lo publica factors; lo consumen gateway y backtest.",
+  "type": "object",
+  "required": ["version", "as_of", "rows", "url", "inputs"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "type": "string", "pattern": "^[0-9]{8}T[0-9]{6}Z$" },
+    "as_of": { "type": "string", "format": "date", "description": "Fecha del ranking más reciente." },
+    "rows": { "type": "integer", "minimum": 0, "description": "Empresas con score en as_of." },
+    "url": { "type": "string", "format": "uri" },
+    "inputs": {
+      "type": "object",
+      "description": "Versiones de los datasets usados (trazabilidad: qué datos produjeron este ranking).",
+      "additionalProperties": { "type": "string" }
+    }
+  }
+}

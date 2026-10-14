@@ -30,6 +30,8 @@ Contexto para retomar el trabajo (para el usuario y para Claude en futuras sesio
 - Precios: `adj_close` (rentabilidades/momentum), `raw_close` = precio real del día (capitalización).
 - yfinance con hilos a veces falla con "database is locked": `prices.py` reintenta uno a uno.
 - Comandos en PowerShell: si `uv`/`git` no aparecen en el PATH, abrir otra terminal.
+- Docker Desktop lo abre el USUARIO: lanzado desde la shell de Claude (sandbox) falla con "rename ...sock: El sistema
+  no tiene acceso al archivo". El CLI `docker` sí funciona desde aquí. Kafka desde el PC: `127.0.0.1:9092` (no `localhost`).
 
 ## Limitaciones conocidas
 - yfinance no tiene casi ninguna empresa deslistada → sesgo de supervivencia residual. Se mide en `coverage_report.json`.
@@ -50,19 +52,16 @@ Contexto para retomar el trabajo (para el usuario y para Claude en futuras sesio
   Salida: `data/processed/factor_scores.parquet` (incluye `fwd_ret_1m` SOLO para evaluar en la fase 3).
   Pendiente/mejoras: mapa SIC imperfecto (p. ej. LRCX 3559 sale Industrials); acciones multiclase
   (BRK, IBKR) sin capitalización; bancos/aseguradoras con métricas poco adecuadas (EV/EBITDA, margen bruto).
-- [x] Interfaz web (2026-10-14): `uv run trl-app` (Streamlit, `src/trlavanda/app/main.py`, tema lavanda en
-  `.streamlit/config.toml`). Se descartó heygen hyperframes: genera vídeo MP4 desde HTML, no UI interactiva
-  (útil quizá para un vídeo demo). Preview en el app: `.claude/launch.json` → "trlavanda-app".
-  La app lee `data/app/` (copia ligera ~7 MB, SÍ versionada; `app/export.py`, se regenera en `trl-ranking --rebuild`)
-  para poder publicarse en Streamlit Community Cloud (entrypoint `src/trlavanda/app/main.py`, deps en
-  `src/trlavanda/app/requirements.txt`). Idea: automatizar la actualización diaria con GitHub Actions.
+- [x] Interfaz Streamlit (`trl-app`): RETIRADA en el hito 1 del sistema distribuido; la única interfaz es `web/`.
 - [x] Web estática estilo app de bolsa (2026-10-14): https://heeriik.github.io/TrLavanda/ — `web/` (index.html,
   style.css, app.js; Lightweight Charts 4.2.0 desde unpkg), datos JSON de `web/export.py` en `web/data/` (no
   versionado), publicación con `uv run trl-web --publish` (ghp-import fuerza la rama gh-pages). Inspirada en
   el estilo de las apps de bolsa (oscuro, minimal), SIN nombre/logo/marca de Trade Republic.
   El gráfico principal es el S&P 500 (SPY): la curva de la estrategia NO se muestra hasta tener backtest serio.
-- [~] Sistema distribuido (`docs/ARQUITECTURA.md`): hito 0 hecho (`be9a0e2`). **Siguiente: hito 1**
-  (retirar Streamlit, uv workspace, `contracts/`, compose con Kafka).
+- [~] Sistema distribuido (`docs/ARQUITECTURA.md`): hitos 0 y 1 hechos (2026-10-14). `docker compose up -d` levanta
+  Kafka 4.1 (KRaft) + topics (desde `contracts/topics.json`) + Kafka UI (:8080); `trlavanda.bus` + `trl-bus`.
+  **Siguiente: hito 2** (servicio ingest: consume `cmd.ingest`, publica `data.updated`, sirve Parquet por HTTP;
+  `[tool.uv.workspace]` con `services/*`). Pendiente: imagen Python de 1,35 GB → aligerar por servicio.
 - [ ] Fase 3: backtest (añadir curva estrategia vs SPY a la web cuando esté)
 - [ ] Fase 4: Google Cloud (opcional; requiere cuenta de facturación + alertas de presupuesto)
 - [x] Publicado en https://github.com/heeriik/TrLavanda (público, MIT). Commits con email noreply de GitHub. `gh` está en `C:\Program Files\GitHub CLI\gh.exe` (la pestaña de terminal del app no completa `gh auth login`; lanzarlo en segundo plano).

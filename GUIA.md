@@ -52,52 +52,39 @@ Columnas: `score` es la media de los 4 factores (`f_value`, `f_quality`, `f_mome
 
 Para tener datos frescos: `uv run trl-datos` y luego `uv run trl-ranking --rebuild`.
 
-## 4a. Web pública (estilo app de bolsa)
+## 4a. Web (estilo app de bolsa) y API
 
-En vivo en https://heeriik.github.io/TrLavanda/. Es HTML/CSS/JS en la carpeta `web/`, y lee unos JSON que genera Python.
-
-```powershell
-uv run trl-web                                            # genera web/data
-uv run python -m http.server 8600 --directory web         # verla en local: http://localhost:8600
-uv run trl-web --publish                                  # publicar (rama gh-pages)
-```
-
-Para actualizarla con datos nuevos: `uv run trl-datos`, después `uv run trl-ranking --rebuild` y por último `uv run trl-web --publish`.
-Los datos de la web no se guardan en `main`. La rama `gh-pages` se sobrescribe en cada publicación, así el historial no engorda.
-
-## 4b. App de exploración (Streamlit)
+La web es HTML/CSS/JS (carpeta `web/`) y pide los datos a la API. En local:
 
 ```powershell
-uv run trl-app
+uv run trl-update                                          # datos al día (~30 s si ya hay datos)
+uv run trl-api                                             # API en http://localhost:8000 (docs: /docs)
+uv run python -m http.server 8600 --directory web          # web en http://localhost:8600
 ```
 
-Se abre en el navegador (http://localhost:8501). Tiene 4 pestañas:
-- **Ranking**: la tabla del ranking con filtros por fecha, sector y capitalización (en la barra lateral), y un gráfico que muestra de qué factores sale el score.
-- **Empresa**: precio histórico, evolución de cada factor y sus métricas frente a la mediana de su sector.
-- **Sectores**: cómo se reparte el top entre sectores a lo largo del tiempo.
-- **Cómo funciona**: resumen del método y de sus limitaciones.
+`uv run trl-web --publish` publica la interfaz en GitHub Pages (https://heeriik.github.io/TrLavanda/).
+Se niega mientras la API no esté desplegada en internet (`PROD_API_BASE` en `web/js/config.js`).
 
-Para cerrarla: Ctrl+C en la terminal. Si cambias los datos (`trl-datos` + `trl-ranking --rebuild`), recarga la página.
+## 4b. Sistema distribuido: Docker y Kafka
 
-### Publicar la app en internet (Streamlit Community Cloud, gratis)
-
-La app lee una copia ligera de los datos (`data/app/`, ~7 MB) que **sí** se sube a GitHub. Se regenera con `uv run trl-ranking --rebuild`.
-
-1. Entra en https://share.streamlit.io e inicia sesión con tu cuenta de GitHub.
-2. **Create app** → *Deploy a public app from GitHub*:
-   - Repository: `heeriik/TrLavanda` · Branch: `main`
-   - Main file path: `src/trlavanda/app/main.py`
-   - App URL: por ejemplo `trlavanda`
-   - *Advanced settings* → Python 3.13
-3. **Deploy**. Tarda 2–3 minutos la primera vez.
-
-Para actualizar los datos de la app publicada:
+Plan completo en [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md). Hace falta Docker Desktop abierto.
 
 ```powershell
-uv run trl-datos
-uv run trl-ranking --rebuild
-git add data/app; git commit -m "Datos actualizados"; git push   # la app se actualiza sola
+docker compose up -d          # Kafka + creación de topics + Kafka UI
+docker compose ps             # estado
+docker compose down           # parar (los datos de Kafka se conservan)
 ```
+
+- Kafka UI (ver topics y mensajes): http://localhost:8080
+- Probar el bus desde el PC:
+
+```powershell
+uv run trl-bus tail cmd.ingest                                                # en una terminal
+uv run trl-bus send cmd.ingest '{\"run_id\": \"prueba\", \"datasets\": [\"prices\"]}'  # en otra
+```
+
+(En PowerShell las comillas dobles dentro del JSON van escapadas con `\`.)
+Los contratos de los eventos (JSON Schema) están en `contracts/`. Un mensaje que no los cumple va a `<topic>.dlq`.
 
 ## 4c. Explorar los datos
 

@@ -31,7 +31,8 @@ rank  ticker  sector                   score  f_value  f_quality  f_momentum  f_
 | 1. Datos | Composición histórica del S&P 500 (Wikipedia), precios diarios (yfinance), estados financieros XBRL (API de SEC EDGAR), en Parquet | ✅ |
 | 2. Screener | Fundamentales *point-in-time*, TTM, 10 métricas, winsorización, z-score por sector, score compuesto | ✅ |
 | 3. Backtest | Top-N mensual con costes de transacción, CAGR, Sharpe, máxima caída, regresión contra factores (statsmodels) | 🔜 |
-| Interfaz | Web estática estilo app de bolsa (GitHub Pages, gráficos de TradingView) y app de exploración en Streamlit | ✅ |
+| Interfaz | Web estilo app de bolsa (HTML/CSS/JS, gráficos de TradingView) servida por una API | ✅ |
+| Sistema distribuido | Servicios Python + Go comunicados por Kafka, contratos en JSON Schema, Docker Compose ([plan](docs/ARQUITECTURA.md)) | 🚧 |
 | 4. Nube | Ejecución diaria en Google Cloud Run + BigQuery (nivel gratuito) | 🔜 |
 
 ## Rigor metodológico
@@ -58,8 +59,8 @@ uv sync                          # entorno e instalación
 cp .env.example .env             # pon un email de contacto en SEC_USER_AGENT (lo exige la SEC)
 uv run trl-datos                 # descarga (~10 min la primera vez)
 uv run trl-ranking               # ranking actual en la terminal
-uv run trl-app                   # app de exploración (Streamlit) en http://localhost:8501
-uv run trl-web --publish         # exporta a JSON y publica la web en GitHub Pages
+uv run trl-api                   # API en http://localhost:8000 (la web local la usa)
+docker compose up -d             # Kafka + topics + Kafka UI (http://localhost:8080)
 uv run trl-ranking --date 2020-03-31 --sector "Health Care"
 uv run pytest
 ```
@@ -74,16 +75,20 @@ src/trlavanda/
   data/        universe.py · prices.py · edgar.py
   factors/     fundamentals.py · sectors.py · screener.py
   backtest/    (fase 3)
-  app/         interfaz Streamlit
-  pipelines/   trl-datos · trl-ranking · trl-app
+  api/         API FastAPI (referencia del futuro gateway en Go)
+  bus.py       eventos sobre Kafka (validados con contracts/)
+  pipelines/   trl-datos · trl-ranking · trl-update · trl-api · trl-bus · trl-web
 tests/         pytest
+contracts/     JSON Schema de los eventos y lista de topics de Kafka
+web/           interfaz HTML/CSS/JS
+compose.yaml   Kafka, Kafka UI y servicios (Docker)
 docs/          conceptos aprendidos
 prompts/       instrucciones para investigación cualitativa de empresas chinas con LLM
 ```
 
 ## Stack
 
-Python 3.14 · Polars · statsmodels · Streamlit · HTML/CSS/JS + TradingView Lightweight Charts · GitHub Pages · yfinance · SEC EDGAR API · uv · pytest · ruff
+Python 3.14 · Polars · statsmodels · FastAPI · Kafka · Docker · HTML/CSS/JS + TradingView Lightweight Charts · GitHub Pages · yfinance · SEC EDGAR API · uv · pytest · ruff
 
 ## Licencia
 

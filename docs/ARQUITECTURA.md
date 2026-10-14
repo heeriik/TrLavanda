@@ -100,12 +100,13 @@ services/
   ingest/                 Python
   factors/                Python
   backtest/               Python (fase 3)
-libs/trlavanda-core/      Python: lo que hoy es src/trlavanda (data, factors), reutilizado
+src/trlavanda/            Python core (data, factors, bus): lo reutilizan ingest/factors/backtest
 web/                      HTML/CSS/JS (GitHub Pages)
+compose.yaml              Kafka + servicios (+ Kafka UI en local)
+Dockerfile                imagen Python común
 deploy/
-  docker-compose.yml      Kafka + servicios (+ Kafka UI en local)
   cloudflared/            configuración del túnel (el token va en .env, NO se versiona)
-pyproject.toml            uv workspace
+pyproject.toml            paquete core + uv workspace (members: services/*)
 ```
 
 ## Hitos
@@ -113,7 +114,7 @@ pyproject.toml            uv workspace
 | # | Hito | Hecho cuando |
 |---|---|---|
 | 0 | ✅ Commit del trabajo pendiente (API FastAPI, `trl-update`, web modular) | `be9a0e2` |
-| 1 | Reestructurar: retirar Streamlit, uv workspace, `libs/trlavanda-core`, `contracts/`, compose con Kafka + Kafka UI | `docker compose up kafka` funciona; los tests siguen pasando |
+| 1 | Retirar Streamlit, `contracts/` (JSON Schema + topics), `trlavanda.bus`, imagen Python, compose con Kafka + Kafka UI. El core se queda en `src/trlavanda` (moverlo no aportaba nada) | `docker compose up kafka` funciona; los tests siguen pasando |
 | 2 | Servicio **ingest** (consumidor de `cmd.ingest`, publica `data.updated`, sirve Parquet) | Un `cmd.ingest` publicado a mano deja una versión nueva y su evento |
 | 3 | Servicio **factors** | Tras el paso 2 aparece `scores.published` sin intervención |
 | 4 | **gateway en Go** con paridad respecto a la FastAPI (tests "golden" con las mismas fixtures sintéticas de `tests/test_api.py`); la web apunta a él; se borra `src/trlavanda/api` | La web local funciona contra el gateway Go |

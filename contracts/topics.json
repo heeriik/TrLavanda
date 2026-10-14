@@ -1,0 +1,9 @@
+{
+  "_comment": "Topics de Kafka. `event` = esquema de events/ que deben cumplir sus mensajes. dlq=true crea además <topic>.dlq para los mensajes que no se pueden procesar. Una partición por topic: el volumen es mínimo y así se conserva el orden.",
+  "topics": {
+    "cmd.ingest":       { "event": "cmd.ingest",       "key": "run_id",  "partitions": 1, "retention_days": 7,  "dlq": true },
+    "data.updated":     { "event": "data.updated",     "key": "dataset", "partitions": 1, "retention_days": 90, "dlq": true },
+    "scores.published": { "event": "scores.published", "key": "scores",  "partitions": 1, "retention_days": 90, "dlq": true },
+    "jobs.status":      { "event": "jobs.status",      "key": "service", "partitions": 1, "retention_days": 7,  "dlq": false }
+  }
+}

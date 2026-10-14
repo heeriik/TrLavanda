@@ -8,7 +8,9 @@ Reglas de la SEC: máximo 10 peticiones/segundo y User-Agent con nombre + email.
 """
 
 import json
+import re
 import time
+from datetime import date
 from pathlib import Path
 
 import httpx
@@ -20,9 +22,10 @@ from trlavanda.config import RAW_DIR, sec_user_agent
 TICKERS_URL = "https://www.sec.gov/files/company_tickers.json"
 FACTS_URL = "https://data.sec.gov/api/xbrl/companyfacts/CIK{cik:010d}.json"
 SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik:010d}.json"
+# Índice de todos los informes del trimestre (se actualiza cada noche).
+FORM_INDEX_URL = "https://www.sec.gov/Archives/edgar/full-index/{year}/QTR{q}/form.idx"
 
 FACTS_DIR = RAW_DIR / "edgar" / "companyfacts"
-CACHE_DAYS = 3  # días que se reutiliza un companyfacts descargado
 META_PATH = RAW_DIR / "edgar" / "company_meta.parquet"
 
 # Conceptos XBRL que necesitan los factores. Las empresas usan nombres distintos para lo
@@ -93,6 +96,14 @@ class SecClient:
         self._last = 0.0
 
     def get_json(self, url: str) -> dict | None:
+        r = self._get(url)
+        return None if r is None else r.json()
+
+    def get_text(self, url: str) -> str | None:
+        r = self._get(url)
+        return None if r is None else r.text
+
+    def _get(self, url: str) -> httpx.Response | None:
         for attempt in range(4):
             wait = self._min_interval - (time.monotonic() - self._last)
             if wait > 0:
@@ -105,7 +116,7 @@ class SecClient:
                 time.sleep(2**attempt)
                 continue
             r.raise_for_status()
-            return r.json()
+            return r
         r.raise_for_status()
         return None
 
@@ -154,33 +165,68 @@ def facts_to_frame(payload: dict) -> pl.DataFrame:
     )
 
 
-def download_facts(
-    ciks: list[int], client: SecClient, refresh: bool = False, max_age_days: float = CACHE_DAYS
-) -> list[int]:
-    """Descarga companyfacts de cada CIK a Parquet (con caché). Devuelve los CIK sin datos.
+FILING_RE = re.compile(r"^(10-[KQ]\S*)\s+.+?\s{2,}(\d+)\s+(\d{4}-\d{2}-\d{2})\s+\S+\s*$")
 
-    Un archivo con más de `max_age_days` días se vuelve a descargar: así se recogen los
-    informes trimestrales nuevos.
-    """
+
+def parse_form_index(text: str) -> pl.DataFrame:
+    """(form, cik, filed) de los 10-K/10-Q de un form.idx de la SEC."""
+    rows = []
+    for line in text.splitlines():
+        m = FILING_RE.match(line)
+        if m:
+            rows.append((m.group(1), int(m.group(2)), date.fromisoformat(m.group(3))))
+    return pl.DataFrame(
+        rows, schema={"form": pl.Utf8, "cik": pl.Int64, "filed": pl.Date}, orient="row"
+    )
+
+
+def recent_filers(client: SecClient, since: date, today: date | None = None) -> set[int]:
+    """CIKs que han presentado un 10-K/10-Q desde `since` (incluido)."""
+    today = today or date.today()
+    quarters = {(d.year, (d.month - 1) // 3 + 1) for d in (since, today)}
+    if len(quarters) == 2 and (today - since).days > 92:  # hueco de más de un trimestre
+        raise ValueError("Última comprobación muy antigua: usa --full")
+    ciks: set[int] = set()
+    for year, q in sorted(quarters):
+        text = client.get_text(FORM_INDEX_URL.format(year=year, q=q))
+        if text:
+            idx = parse_form_index(text)
+            ciks |= set(idx.filter(pl.col("filed") >= since)["cik"].to_list())
+    return ciks
+
+
+def download_facts(
+    ciks: list[int], client: SecClient, force: set[int] | None = None, refresh: bool = False
+) -> list[int]:
+    """Descarga companyfacts a Parquet. Solo pide lo que falta, lo de `force` (empresas con
+    informes nuevos) o todo si `refresh`. Devuelve los CIK sin datos."""
     FACTS_DIR.mkdir(parents=True, exist_ok=True)
+    force = force or set()
+    todo = [
+        c for c in ciks if refresh or c in force or not (FACTS_DIR / f"{c:010d}.parquet").exists()
+    ]
     missing = []
-    for cik in tqdm(ciks, desc="EDGAR companyfacts"):
-        path = FACTS_DIR / f"{cik:010d}.parquet"
-        fresh = path.exists() and (time.time() - path.stat().st_mtime) < max_age_days * 86400
-        if fresh and not refresh:
-            continue
+    for cik in tqdm(todo, desc="EDGAR companyfacts", disable=not todo):
         payload = client.get_json(FACTS_URL.format(cik=cik))
         if payload is None:
             missing.append(cik)
             continue
-        facts_to_frame(payload).write_parquet(path)
+        facts_to_frame(payload).write_parquet(FACTS_DIR / f"{cik:010d}.parquet")
     return missing
 
 
-def download_company_meta(ciks: list[int], client: SecClient) -> pl.DataFrame:
-    """Nombre, código SIC (sector) y tickers de cada empresa (endpoint submissions)."""
+def download_company_meta(
+    ciks: list[int], client: SecClient, refresh: bool = False
+) -> pl.DataFrame:
+    """Nombre, código SIC (sector) y tickers de cada empresa (endpoint submissions).
+
+    Solo consulta las empresas que aún no están en la tabla (salvo `refresh`).
+    """
+    old = None if refresh or not META_PATH.exists() else pl.read_parquet(META_PATH)
+    known = set() if old is None else set(old["cik"].to_list())
+    todo = [c for c in ciks if c not in known]
     rows = []
-    for cik in tqdm(ciks, desc="EDGAR submissions"):
+    for cik in tqdm(todo, desc="EDGAR submissions", disable=not todo):
         sub = client.get_json(SUBMISSIONS_URL.format(cik=cik))
         if sub is None:
             continue
@@ -203,6 +249,8 @@ def download_company_meta(ciks: list[int], client: SecClient) -> pl.DataFrame:
             "tickers": pl.Utf8,
         },
     )
+    if old is not None:
+        meta = pl.concat([old, meta])
     META_PATH.parent.mkdir(parents=True, exist_ok=True)
     meta.write_parquet(META_PATH)
     return meta

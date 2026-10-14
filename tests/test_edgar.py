@@ -50,3 +50,20 @@ def test_instant_facts_have_no_start():
     df = facts_to_frame(PAYLOAD)
     shares = df.filter(df["concept"] == "EntityCommonStockSharesOutstanding").row(0, named=True)
     assert shares["start"] is None
+
+
+def test_parse_form_index_keeps_10k_10q():
+    from trlavanda.data.edgar import parse_form_index
+
+    text = "\n".join(
+        [
+            "Form Type   Company Name      CIK         Date Filed  File Name",
+            "-" * 60,
+            "10-Q             APOGEE ENTERPRISES, INC.          6845        2026-10-06  edgar/data/6845/x.txt",  # noqa: E501
+            "8-K              APPLE INC                         320193      2026-10-07  edgar/data/320193/y.txt",  # noqa: E501
+            "10-K/A           SOME CO  INC                      1234        2026-10-08  edgar/data/1234/z.txt",  # noqa: E501
+        ]
+    )
+    df = parse_form_index(text)
+    assert df["cik"].to_list() == [6845, 1234]
+    assert df["form"].to_list() == ["10-Q", "10-K/A"]

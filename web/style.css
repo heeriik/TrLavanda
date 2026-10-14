@@ -184,3 +184,24 @@ footer a { color: var(--muted); text-decoration: underline; }
   .headline { font-size: 34px; }
   .factor { grid-template-columns: 92px 1fr 42px; }
 }
+
+/* ---------- Estado de los datos (arriba) ---------- */
+.statusbar {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; justify-content: center; align-items: center; gap: 8px;
+  height: 28px; font-size: 12px; color: var(--muted);
+  background: rgba(0, 0, 0, .85); backdrop-filter: blur(10px);
+}
+.statusbar:empty { display: none; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--faint); }
+.dot.live { background: var(--up); box-shadow: 0 0 8px var(--up); }
+.dot.offline { background: var(--down); }
+.statusbar.pulse { animation: pulse 1.2s ease-out; }
+@keyframes pulse { 0% { color: var(--up); } 100% { color: var(--muted); } }
+
+/* Destello en el componente que se acaba de actualizar */
+.updated { animation: updated 1.4s ease-out; border-radius: var(--radius); }
+@keyframes updated { 0% { box-shadow: 0 0 0 2px rgba(185, 164, 255, .55); } 100% { box-shadow: 0 0 0 2px rgba(185, 164, 255, 0); } }
+
+.inline-error { color: var(--down); font-size: 14px; padding: 16px 0; }
+.error code { color: var(--text); }

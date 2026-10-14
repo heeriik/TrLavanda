@@ -1,39 +1,51 @@
-"""Web estática estilo app de bolsa.
+"""Publica la INTERFAZ (carpeta web/) en GitHub Pages. Los datos NO van aquí: la web los pide
+a la API. Solo hace falta publicar cuando cambia el código de la interfaz.
 
 Uso:
-    uv run trl-web             # exporta los datos a web/data (para verla en local)
-    uv run trl-web --publish   # exporta y publica en GitHub Pages (rama gh-pages)
+    uv run trl-web --publish
 """
 
 import argparse
+import re
 import subprocess
 import sys
 
 from trlavanda.config import ROOT
-from trlavanda.web.export import export_web_data
 
+WEB_DIR = ROOT / "web"
+CONFIG_JS = WEB_DIR / "js" / "config.js"
 PAGES_URL = "https://heeriik.github.io/TrLavanda/"
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Web estática de TrLavanda")
-    parser.add_argument("--publish", action="store_true", help="publicar en GitHub Pages")
+    parser = argparse.ArgumentParser(description="Publicar la interfaz en GitHub Pages")
+    parser.add_argument("--publish", action="store_true")
     args = parser.parse_args()
 
-    print("Exportando datos a web/data...")
-    export_web_data()
-
+    config = CONFIG_JS.read_text(encoding="utf-8")
+    prod_api = re.search(r'PROD_API_BASE\s*=\s*"([^"]*)"', config)
+    if not prod_api or not prod_api.group(1):
+        sys.exit(
+            "La API aún no está desplegada en internet (PROD_API_BASE vacío en web/js/config.js).\n"
+            "Publicar ahora dejaría la web sin datos; la versión pública actual se mantiene."
+        )
     if args.publish:
-        # gh-pages se reescribe en cada publicación (-f): los datos no engordan el historial.
-        print("Publicando en GitHub Pages...")
         subprocess.run(
-            [sys.executable, "-m", "ghp_import", "-n", "-p", "-f", "-m", "Publicar web", "web"],
+            [
+                sys.executable,
+                "-m",
+                "ghp_import",
+                "-n",
+                "-p",
+                "-f",
+                "-m",
+                "Publicar interfaz",
+                "web",
+            ],
             cwd=ROOT,
             check=True,
         )
-        print(f"Listo: {PAGES_URL} (puede tardar 1-2 minutos en actualizarse)")
-    else:
-        print("Para verla en local: uv run python -m http.server 8600 --directory web")
+        print(f"Interfaz publicada: {PAGES_URL}")
 
 
 if __name__ == "__main__":

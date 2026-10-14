@@ -13,10 +13,11 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main id="app" class="app" aria-live="polite">
+  <div class="statusbar" id="status" aria-live="polite"></div>
+  <main id="app" class="app">
     <div class="loading">Cargando…</div>
   </main>
   <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
-  <script src="app.js"></script>
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>

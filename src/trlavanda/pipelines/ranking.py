@@ -16,7 +16,6 @@ import polars as pl
 
 from trlavanda.app.export import export_app_data
 from trlavanda.factors import fundamentals, screener
-from trlavanda.web.export import export_web_data
 
 DISCLAIMER = "Herramienta de aprendizaje. No es una recomendación de inversión."
 
@@ -37,8 +36,6 @@ def main() -> None:
         screener.build_scores()
         print("Exportando datos ligeros para la interfaz web (data/app)...")
         export_app_data()
-        print("Exportando datos para la web (web/data)...")
-        export_web_data()
 
     df = pl.read_parquet(screener.SCORES_PATH).filter(pl.col("score").is_not_null())
     target = args.date or df["date"].max()

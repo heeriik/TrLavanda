@@ -21,6 +21,12 @@ sistema de servicios que se comunican por **eventos (Kafka)** y **APIs HTTP**.
 | Exposición a internet | **Cloudflare Tunnel** | HTTPS sin abrir puertos en la VM. |
 | Clientes de Kafka | `confluent-kafka` (Python), `franz-go` (Go) | Oficial / Go puro sin cgo (compila para ARM sin dolor). |
 
+**Reparto de responsabilidades:** Go es el *backend de servicio* (recibe las peticiones de la web,
+cachea, programa los jobs). Toda la **lógica de negocio** sigue en Python: descargar y seleccionar
+empresas, fundamentales, factores, scores y backtest. El gateway solo sirve resultados ya calculados
+(filtrar o paginar una lista no es lógica de negocio). Más adelante se podrá portar a Go (u otro
+lenguaje) alguna parte si hace falta por eficiencia; no es un objetivo ahora.
+
 ## Vista general
 
 ```

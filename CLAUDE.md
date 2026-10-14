@@ -20,7 +20,8 @@ Contexto para retomar el trabajo (para el usuario y para Claude en futuras sesio
 - Backtest por defecto: rebalanceo mensual, top 30 equiponderado, 10 pb de coste por operación, benchmark SPY.
 - Subagentes: búsquedas y tareas simples con Haiku.
 - **Arquitectura distribuida (2026-10-14), ver `docs/ARQUITECTURA.md`:** Kafka (KRaft) como broker;
-  gateway y scheduler en Go; ingest/factors/backtest en Python; front solo HTML/CSS/JS (`web/`,
+  gateway y scheduler en Go (solo backend de servicio); TODA la lógica (buscar/seleccionar empresas,
+  cálculos, factores, backtest) sigue en Python — portar partes a Go por eficiencia, quizá más adelante; front solo HTML/CSS/JS (`web/`,
   Streamlit se retira); contratos en JSON Schema; Docker Compose en VM Oracle Always Free + Cloudflare Tunnel.
 
 ## Notas técnicas

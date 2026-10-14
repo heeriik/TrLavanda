@@ -12,3 +12,5 @@ notebooks
 docs
 prompts
 tests
+services/*/tests
+services/*/Dockerfile

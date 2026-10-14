@@ -57,6 +57,26 @@ services:
         condition: service_healthy
     restart: "no"
 
+  ingest:
+    build:
+      context: .
+      dockerfile: services/ingest/Dockerfile
+    image: trlavanda-ingest
+    environment:
+      KAFKA_BOOTSTRAP: kafka:29092
+      INGEST_PUBLIC_URL: http://ingest:8000   # dirección que va dentro de los eventos
+      SEC_USER_AGENT: ${SEC_USER_AGENT:?Falta SEC_USER_AGENT en .env}
+    ports:
+      - "127.0.0.1:8001:8000"
+    volumes:
+      - ingest-data:/data   # sus datos: nadie más los toca (se piden por HTTP)
+    depends_on:
+      kafka:
+        condition: service_healthy
+      topics:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
   kafka-ui:
     image: kafbat/kafka-ui:v1.3.0
     environment:
@@ -71,3 +91,4 @@ services:
 
 volumes:
   kafka-data:
+  ingest-data:

@@ -84,19 +84,39 @@ def kafka_disponible() -> bool:
 
 
 kafka = pytest.mark.skipif(not kafka_disponible(), reason="Kafka no está arrancado")
+TEST_TOPIC = "test.events"  # topic solo para tests: los servicios no lo escuchan
+
+
+@pytest.fixture
+def topic(monkeypatch):
+    """Añade un topic de pruebas (con DLQ) a la lista de topics y lo crea en Kafka."""
+    monkeypatch.setitem(
+        bus.TOPICS,
+        TEST_TOPIC,
+        {
+            "event": "jobs.status",
+            "key": "service",
+            "partitions": 1,
+            "retention_days": 1,
+            "dlq": True,
+        },
+    )
+    bus.ensure_topics()
+    return TEST_TOPIC
+
+
+def status(marca: str) -> dict:
+    return {"service": "test", "job": f"test:{marca}", "state": "succeeded"}
 
 
 @pytest.mark.kafka
 @kafka
-def test_publicar_y_consumir():
-    bus.ensure_topics()
+def test_publicar_y_consumir(topic):
     marca = uuid.uuid4().hex
-    enviado = bus.Publisher(source="test").publish(
-        "jobs.status", {"service": "test", "job": f"roundtrip:{marca}", "state": "succeeded"}
-    )
+    enviado = bus.Publisher(source="test").publish(topic, status(marca))
     recibidos = []
     bus.consume(
-        ["jobs.status"],
+        [topic],
         group_id=f"test-{marca}",
         handler=recibidos.append,
         stop=lambda: any(e["id"] == enviado["id"] for e in recibidos),
@@ -106,16 +126,15 @@ def test_publicar_y_consumir():
 
 @pytest.mark.kafka
 @kafka
-def test_mensaje_invalido_va_a_la_dlq():
-    bus.ensure_topics()
+def test_mensaje_invalido_va_a_la_dlq(topic):
     marca = uuid.uuid4().hex
     pub = bus.Publisher(source="test")
-    pub._send("cmd.ingest", marca, b"esto no es JSON " + marca.encode())
-    valido = pub.publish("cmd.ingest", {"run_id": marca, "datasets": ["prices"]})
+    pub._send(topic, marca, b"esto no es JSON " + marca.encode())
+    valido = pub.publish(topic, status(marca))
 
     procesados = []
     bus.consume(
-        ["cmd.ingest"],
+        [topic],
         group_id=f"test-{marca}",
         handler=procesados.append,
         stop=lambda: any(e["id"] == valido["id"] for e in procesados),
@@ -123,7 +142,7 @@ def test_mensaje_invalido_va_a_la_dlq():
 
     en_dlq = []
     bus.consume(
-        ["cmd.ingest.dlq"],
+        [f"{topic}.dlq"],
         group_id=f"test-dlq-{marca}",
         handler=en_dlq.append,
         stop=lambda: any(marca in m for m in en_dlq),

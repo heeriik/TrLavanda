@@ -37,7 +37,14 @@ dev = [
     "gitpython>=3.2.0",
     "ghp-import>=2.1.0",
     "httpx>=0.27",
+    "trlavanda-ingest",  # servicios del workspace: así `uv sync` los instala para los tests
 ]
+
+[tool.uv.workspace]
+members = ["services/*"]
+
+[tool.uv.sources]
+trlavanda-ingest = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]
@@ -47,7 +54,7 @@ build-backend = "hatchling.build"
 packages = ["src/trlavanda"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests", "services"]
 pythonpath = ["src"]
 markers = ["kafka: necesita Kafka arrancado (docker compose up -d); se salta si no está"]
 

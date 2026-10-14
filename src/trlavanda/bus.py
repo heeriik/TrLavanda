@@ -151,12 +151,14 @@ def consume(
     stop: Callable[[], bool] = lambda: False,
     from_beginning: bool = True,
     raw: bool = False,
+    config: dict | None = None,
 ) -> None:
     """Bucle de consumo. Llama a `handler(evento)` y confirma el mensaje después.
 
     Si `handler` lanza una excepción, NO se confirma: el bucle termina con el error y, al
     reiniciar el servicio, el mensaje se vuelve a recibir. (Reintentos con espera: hito 5.)
     Con `raw=True` no se valida y `handler` recibe el texto tal cual (para inspeccionar DLQs).
+    `config`: opciones extra de librdkafka (p. ej. `max.poll.interval.ms` para trabajos largos).
     """
     consumer = Consumer(
         {
@@ -165,6 +167,7 @@ def consume(
             "enable.auto.commit": False,
             "auto.offset.reset": "earliest" if from_beginning else "latest",
         }
+        | (config or {})
     )
     dlq = Publisher(source=group_id, bootstrap=bootstrap)
     consumer.subscribe(topics)

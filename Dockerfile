@@ -16,13 +16,13 @@ WORKDIR /app
 # 1) Solo las dependencias: esta capa se reutiliza mientras no cambie uv.lock (builds rápidos).
 COPY pyproject.toml uv.lock README.md ./
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --locked --no-dev --no-install-project
+    uv sync --frozen --no-dev --no-install-workspace --package trlavanda
 
 # 2) El código y los contratos.
 COPY src ./src
 COPY contracts ./contracts
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --locked --no-dev
+    uv sync --frozen --no-dev --package trlavanda
 
 ENV PATH="/app/.venv/bin:$PATH" \
     TRL_DATA_DIR=/data

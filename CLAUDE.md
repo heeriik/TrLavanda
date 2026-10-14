@@ -58,10 +58,13 @@ Contexto para retomar el trabajo (para el usuario y para Claude en futuras sesio
   versionado), publicación con `uv run trl-web --publish` (ghp-import fuerza la rama gh-pages). Inspirada en
   el estilo de las apps de bolsa (oscuro, minimal), SIN nombre/logo/marca de Trade Republic.
   El gráfico principal es el S&P 500 (SPY): la curva de la estrategia NO se muestra hasta tener backtest serio.
-- [~] Sistema distribuido (`docs/ARQUITECTURA.md`): hitos 0 y 1 hechos (2026-10-14). `docker compose up -d` levanta
+- [~] Sistema distribuido (`docs/ARQUITECTURA.md`): hitos 0, 1 y 2 hechos (2026-10-14). `docker compose up -d` levanta
   Kafka 4.1 (KRaft) + topics (desde `contracts/topics.json`) + Kafka UI (:8080); `trlavanda.bus` + `trl-bus`.
-  **Siguiente: hito 2** (servicio ingest: consume `cmd.ingest`, publica `data.updated`, sirve Parquet por HTTP;
-  `[tool.uv.workspace]` con `services/*`). Pendiente: imagen Python de 1,35 GB → aligerar por servicio.
+  Servicio ingest en `services/ingest` (miembro del uv workspace; :8001; volumen propio `ingest-data`, sembrado
+  desde `data/`). Los pasos de ingesta están en `trlavanda/data/ingest.py` (los usa también `trl-datos`).
+  Tests de Kafka usan el topic `test.events`, nunca los reales (un `cmd.ingest` de test lanzaría descargas).
+  **Siguiente: hito 3** (servicio factors: consume `data.updated`, baja las versiones por HTTP, calcula y publica
+  `scores.published`). Pendiente: imágenes de 1,35 GB → aligerar por servicio.
 - [ ] Fase 3: backtest (añadir curva estrategia vs SPY a la web cuando esté)
 - [ ] Fase 4: Google Cloud (opcional; requiere cuenta de facturación + alertas de presupuesto)
 - [x] Publicado en https://github.com/heeriik/TrLavanda (público, MIT). Commits con email noreply de GitHub. `gh` está en `C:\Program Files\GitHub CLI\gh.exe` (la pestaña de terminal del app no completa `gh auth login`; lanzarlo en segundo plano).

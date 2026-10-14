@@ -54,7 +54,7 @@ Reglas:
 | Servicio | Lenguaje | Consume | Publica | HTTP | Datos propios |
 |---|---|---|---|---|---|
 | **scheduler** | Go | — | `cmd.ingest` (cron diario) | `/healthz` | — |
-| **ingest** | Python | `cmd.ingest` | `data.updated` | `GET /datasets/{name}/versions/{v}` (Parquet), `/healthz` | universo, precios, EDGAR |
+| **ingest** | Python | `cmd.ingest` | `data.updated` | `GET /datasets`, `/datasets/{name}/latest`, `/datasets/{name}/versions/{v}[/files/{f}]`, `/healthz` | universo, precios, EDGAR |
 | **factors** | Python | `data.updated` | `scores.published` | `GET /scores/versions/{v}` (Parquet), `/healthz` | fundamentales PIT, scores |
 | **gateway** | Go | `scores.published`, `data.updated` (precios) | — | La API actual de la web (`/api/meta`, `/api/ranking`, `/api/companies/...`) | caché en memoria |
 | **backtest** (fase 3) | Python | `scores.published` | `backtest.completed` | `POST /backtests`, `GET /backtests/{id}` | resultados |
@@ -109,13 +109,24 @@ deploy/
 pyproject.toml            paquete core + uv workspace (members: services/*)
 ```
 
+## Datasets de ingest
+
+| Dataset | Archivos | `as_of` |
+|---|---|---|
+| `universe` | `sp500_membership.parquet` (miembros a fin de mes), `sp500_current.parquet`, `sp500_changes.parquet` | último fin de mes |
+| `edgar` | `company_facts.parquet` (todas las empresas en uno), `company_meta.parquet` (SIC), `ticker_cik.parquet` | último `filed` |
+| `prices` | `prices.parquet`, `coverage_report.json` | último día con precio |
+
+Se guardan las 3 últimas versiones de cada uno. Si una ingesta no cambia nada, no hay versión ni evento.
+Un `run_id` ya procesado se ignora (`jobs.status` = `skipped`).
+
 ## Hitos
 
 | # | Hito | Hecho cuando |
 |---|---|---|
 | 0 | ✅ Commit del trabajo pendiente (API FastAPI, `trl-update`, web modular) | `be9a0e2` |
 | 1 | Retirar Streamlit, `contracts/` (JSON Schema + topics), `trlavanda.bus`, imagen Python, compose con Kafka + Kafka UI. El core se queda en `src/trlavanda` (moverlo no aportaba nada) | `docker compose up kafka` funciona; los tests siguen pasando |
-| 2 | Servicio **ingest** (consumidor de `cmd.ingest`, publica `data.updated`, sirve Parquet) | Un `cmd.ingest` publicado a mano deja una versión nueva y su evento |
+| 2 | ✅ Servicio **ingest** (`services/ingest`): consume `cmd.ingest`, versiona (`versions/<dataset>/<v>/` + `LATEST`), publica `data.updated` y sirve los archivos por HTTP (:8001 desde el PC) | Probado de punta a punta el 2026-10-14, incluido un reinicio a mitad de trabajo |
 | 3 | Servicio **factors** | Tras el paso 2 aparece `scores.published` sin intervención |
 | 4 | **gateway en Go** con paridad respecto a la FastAPI (tests "golden" con las mismas fixtures sintéticas de `tests/test_api.py`); la web apunta a él; se borra `src/trlavanda/api` | La web local funciona contra el gateway Go |
 | 5 | **scheduler** Go + resiliencia (reintentos con backoff, DLQ, idempotencia) + logs JSON con `correlation_id` + `/healthz` | Matar un servicio a mitad no corrompe datos y al volver se recupera solo |

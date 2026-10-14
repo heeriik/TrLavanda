@@ -4,8 +4,9 @@ Uso:
     uv run trl-update          # ~30 s: baja solo lo nuevo y recalcula
     uv run trl-update --full   # desde cero
 
-La API (si está arrancada) detecta los archivos nuevos y los sirve sin reiniciarse; la
-interfaz lo nota en su próxima consulta a /api/meta y refresca solo lo que ha cambiado.
+Trabaja sobre la carpeta data/ local (sin Docker). En el sistema distribuido esto lo hacen los
+servicios ingest y factors; el gateway puede servir data/ en modo local:
+    go run ./services/gateway/cmd/gateway -local data
 """
 
 import sys

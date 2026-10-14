@@ -1,0 +1,1428 @@
+[
+ {
+  "url": "/api/meta",
+  "status": 200,
+  "body": {
+   "last_date": "2026-09-30",
+   "n": 5,
+   "sectors": [
+    "Energy",
+    "Industrials",
+    "Utilities"
+   ],
+   "dates": 3,
+   "coverage": {
+    "tickers": 7,
+    "sin_precios": 2
+   }
+  }
+ },
+ {
+  "url": "/api/ranking",
+  "status": 200,
+  "body": {
+   "date": "2026-09-30",
+   "total": 5,
+   "rows": [
+    {
+     "t": "AAA",
+     "n": "Aaa Energy, Inc.",
+     "s": "Energy",
+     "r": 1,
+     "sc": 1.27,
+     "f": {
+      "value": 0.31,
+      "quality": 1.31,
+      "momentum": 2.31,
+      "growth": 3.31
+     },
+     "cap": 12.3,
+     "px": 87.9,
+     "d1": 0.0088,
+     "y1": null
+    },
+    {
+     "t": "BBB",
+     "n": "Bbb Oil Corp",
+     "s": "Energy",
+     "r": 2,
+     "sc": 0.87,
+     "f": {
+      "value": 0.06,
+      "quality": 1.06,
+      "momentum": 2.06,
+      "growth": 3.06
+     },
+     "cap": null,
+     "px": 70.0,
+     "d1": null,
+     "y1": null
+    },
+    {
+     "t": "CCC",
+     "n": "Ccc Power Co",
+     "s": "Utilities",
+     "r": 3,
+     "sc": 0.47,
+     "f": {
+      "value": -0.19,
+      "quality": 0.81,
+      "momentum": 1.81,
+      "growth": null
+     },
+     "cap": null,
+     "px": 20.0,
+     "d1": 0.0,
+     "y1": null
+    },
+    {
+     "t": "DDD",
+     "n": "At&T Inc.",
+     "s": "Energy",
+     "r": 4,
+     "sc": 0.07,
+     "f": {
+      "value": -0.44,
+      "quality": 0.56,
+      "momentum": 1.56,
+      "growth": 2.56
+     },
+     "cap": 49.4,
+     "px": null,
+     "d1": null,
+     "y1": null
+    },
+    {
+     "t": "FFF",
+     "n": "Moody'S Corp /De/",
+     "s": "Industrials",
+     "r": 5,
+     "sc": -0.73,
+     "f": {
+      "value": -0.94,
+      "quality": 0.06,
+      "momentum": 1.06,
+      "growth": 2.06
+     },
+     "cap": 74.0,
+     "px": 299.98,
+     "d1": -0.0022,
+     "y1": null
+    }
+   ]
+  }
+ },
+ {
+  "url": "/api/ranking?sector=Energy",
+  "status": 200,
+  "body": {
+   "date": "2026-09-30",
+   "total": 3,
+   "rows": [
+    {
+     "t": "AAA",
+     "n": "Aaa Energy, Inc.",
+     "s": "Energy",
+     "r": 1,
+     "sc": 1.27,
+     "f": {
+      "value": 0.31,
+      "quality": 1.31,
+      "momentum": 2.31,
+      "growth": 3.31
+     },
+     "cap": 12.3,
+     "px": 87.9,
+     "d1": 0.0088,
+     "y1": null
+    },
+    {
+     "t": "BBB",
+     "n": "Bbb Oil Corp",
+     "s": "Energy",
+     "r": 2,
+     "sc": 0.87,
+     "f": {
+      "value": 0.06,
+      "quality": 1.06,
+      "momentum": 2.06,
+      "growth": 3.06
+     },
+     "cap": null,
+     "px": 70.0,
+     "d1": null,
+     "y1": null
+    },
+    {
+     "t": "DDD",
+     "n": "At&T Inc.",
+     "s": "Energy",
+     "r": 4,
+     "sc": 0.07,
+     "f": {
+      "value": -0.44,
+      "quality": 0.56,
+      "momentum": 1.56,
+      "growth": 2.56
+     },
+     "cap": 49.4,
+     "px": null,
+     "d1": null,
+     "y1": null
+    }
+   ]
+  }
+ },
+ {
+  "url": "/api/ranking?sector=Nope",
+  "status": 200,
+  "body": {
+   "date": null,
+   "total": 0,
+   "rows": []
+  }
+ },
+ {
+  "url": "/api/ranking?q=at%26t",
+  "status": 200,
+  "body": {
+   "date": "2026-09-30",
+   "total": 1,
+   "rows": [
+    {
+     "t": "DDD",
+     "n": "At&T Inc.",
+     "s": "Energy",
+     "r": 4,
+     "sc": 0.07,
+     "f": {
+      "value": -0.44,
+      "quality": 0.56,
+      "momentum": 1.56,
+      "growth": 2.56
+     },
+     "cap": 49.4,
+     "px": null,
+     "d1": null,
+     "y1": null
+    }
+   ]
+  }
+ },
+ {
+  "url": "/api/ranking?q=%20aaa%20",
+  "status": 200,
+  "body": {
+   "date": "2026-09-30",
+   "total": 1,
+   "rows": [
+    {
+     "t": "AAA",
+     "n": "Aaa Energy, Inc.",
+     "s": "Energy",
+     "r": 1,
+     "sc": 1.27,
+     "f": {
+      "value": 0.31,
+      "quality": 1.31,
+      "momentum": 2.31,
+      "growth": 3.31
+     },
+     "cap": 12.3,
+     "px": 87.9,
+     "d1": 0.0088,
+     "y1": null
+    }
+   ]
+  }
+ },
+ {
+  "url": "/api/ranking?q=moody",
+  "status": 200,
+  "body": {
+   "date": "2026-09-30",
+   "total": 1,
+   "rows": [
+    {
+     "t": "FFF",
+     "n": "Moody'S Corp /De/",
+     "s": "Industrials",
+     "r": 5,
+     "sc": -0.73,
+     "f": {
+      "value": -0.94,
+      "quality": 0.06,
+      "momentum": 1.06,
+      "growth": 2.06
+     },
+     "cap": 74.0,
+     "px": 299.98,
+     "d1": -0.0022,
+     "y1": null
+    }
+   ]
+  }
+ },
+ {
+  "url": "/api/ranking?limit=2&offset=1",
+  "status": 200,
+  "body": {
+   "date": "2026-09-30",
+   "total": 5,
+   "rows": [
+    {
+     "t": "BBB",
+     "n": "Bbb Oil Corp",
+     "s": "Energy",
+     "r": 2,
+     "sc": 0.87,
+     "f": {
+      "value": 0.06,
+      "quality": 1.06,
+      "momentum": 2.06,
+      "growth": 3.06
+     },
+     "cap": null,
+     "px": 70.0,
+     "d1": null,
+     "y1": null
+    },
+    {
+     "t": "CCC",
+     "n": "Ccc Power Co",
+     "s": "Utilities",
+     "r": 3,
+     "sc": 0.47,
+     "f": {
+      "value": -0.19,
+      "quality": 0.81,
+      "momentum": 1.81,
+      "growth": null
+     },
+     "cap": null,
+     "px": 20.0,
+     "d1": 0.0,
+     "y1": null
+    }
+   ]
+  }
+ },
+ {
+  "url": "/api/ranking?limit=600&offset=10",
+  "status": 200,
+  "body": {
+   "date": "2026-09-30",
+   "total": 5,
+   "rows": []
+  }
+ },
+ {
+  "url": "/api/ranking?date=2026-09-15",
+  "status": 200,
+  "body": {
+   "date": "2026-08-31",
+   "total": 6,
+   "rows": [
+    {
+     "t": "AAA",
+     "n": "Aaa Energy, Inc.",
+     "s": "Energy",
+     "r": 1,
+     "sc": 1.26,
+     "f": {
+      "value": 0.31,
+      "quality": 1.31,
+      "momentum": 2.31,
+      "growth": 3.31
+     },
+     "cap": 12.3,
+     "px": 87.9,
+     "d1": 0.0088,
+     "y1": null
+    },
+    {
+     "t": "BBB",
+     "n": "Bbb Oil Corp",
+     "s": "Energy",
+     "r": 2,
+     "sc": 0.86,
+     "f": {
+      "value": 0.06,
+      "quality": 1.06,
+      "momentum": 2.06,
+      "growth": 3.06
+     },
+     "cap": null,
+     "px": 70.0,
+     "d1": null,
+     "y1": null
+    },
+    {
+     "t": "CCC",
+     "n": "Ccc Power Co",
+     "s": "Utilities",
+     "r": 3,
+     "sc": 0.46,
+     "f": {
+      "value": -0.19,
+      "quality": 0.81,
+      "momentum": 1.81,
+      "growth": null
+     },
+     "cap": null,
+     "px": 20.0,
+     "d1": 0.0,
+     "y1": null
+    },
+    {
+     "t": "DDD",
+     "n": "At&T Inc.",
+     "s": "Energy",
+     "r": 4,
+     "sc": 0.06,
+     "f": {
+      "value": -0.44,
+      "quality": 0.56,
+      "momentum": 1.56,
+      "growth": 2.56
+     },
+     "cap": 49.4,
+     "px": null,
+     "d1": null,
+     "y1": null
+    },
+    {
+     "t": "EEE",
+     "n": "3M Co",
+     "s": "Industrials",
+     "r": 5,
+     "sc": -0.34,
+     "f": {
+      "value": -0.69,
+      "quality": 0.31,
+      "momentum": 1.31,
+      "growth": 2.31
+     },
+     "cap": 61.7,
+     "px": 96.01,
+     "d1": -0.0007,
+     "y1": null
+    },
+    {
+     "t": "FFF",
+     "n": "Moody'S Corp /De/",
+     "s": "Industrials",
+     "r": 6,
+     "sc": -0.74,
+     "f": {
+      "value": -0.94,
+      "quality": 0.06,
+      "momentum": 1.06,
+      "growth": 2.06
+     },
+     "cap": 74.0,
+     "px": 299.98,
+     "d1": -0.0022,
+     "y1": null
+    }
+   ]
+  }
+ },
+ {
+  "url": "/api/ranking?date=2020-01-01",
+  "status": 200,
+  "body": {
+   "date": null,
+   "total": 0,
+   "rows": []
+  }
+ },
+ {
+  "url": "/api/ranking?date=2026-09-30&sector=Energy&q=b",
+  "status": 200,
+  "body": {
+   "date": "2026-09-30",
+   "total": 1,
+   "rows": [
+    {
+     "t": "BBB",
+     "n": "Bbb Oil Corp",
+     "s": "Energy",
+     "r": 2,
+     "sc": 0.87,
+     "f": {
+      "value": 0.06,
+      "quality": 1.06,
+      "momentum": 2.06,
+      "growth": 3.06
+     },
+     "cap": null,
+     "px": 70.0,
+     "d1": null,
+     "y1": null
+    }
+   ]
+  }
+ },
+ {
+  "url": "/api/index/prices",
+  "status": 200,
+  "body": {
+   "ticker": "SPY",
+   "name": "S&P 500",
+   "last": 789.5,
+   "series": [
+    [
+     "2025-09-01",
+     600.0
+    ],
+    [
+     "2025-09-08",
+     603.89
+    ],
+    [
+     "2025-09-15",
+     607.78
+    ],
+    [
+     "2025-09-22",
+     611.67
+    ],
+    [
+     "2025-09-29",
+     615.56
+    ],
+    [
+     "2025-10-06",
+     619.44
+    ],
+    [
+     "2025-10-13",
+     623.33
+    ],
+    [
+     "2025-10-20",
+     627.22
+    ],
+    [
+     "2025-10-27",
+     631.11
+    ],
+    [
+     "2025-11-03",
+     635.0
+    ],
+    [
+     "2025-11-10",
+     638.89
+    ],
+    [
+     "2025-11-17",
+     642.78
+    ],
+    [
+     "2025-11-24",
+     646.67
+    ],
+    [
+     "2025-12-01",
+     650.56
+    ],
+    [
+     "2025-12-08",
+     654.44
+    ],
+    [
+     "2025-12-15",
+     658.33
+    ],
+    [
+     "2025-12-22",
+     662.22
+    ],
+    [
+     "2025-12-29",
+     666.11
+    ],
+    [
+     "2026-01-05",
+     670.0
+    ],
+    [
+     "2026-01-12",
+     673.89
+    ],
+    [
+     "2026-01-19",
+     677.78
+    ],
+    [
+     "2026-01-26",
+     681.67
+    ],
+    [
+     "2026-02-02",
+     685.56
+    ],
+    [
+     "2026-02-09",
+     689.44
+    ],
+    [
+     "2026-02-16",
+     693.33
+    ],
+    [
+     "2026-02-23",
+     697.22
+    ],
+    [
+     "2026-03-02",
+     701.11
+    ],
+    [
+     "2026-03-09",
+     705.0
+    ],
+    [
+     "2026-03-16",
+     708.89
+    ],
+    [
+     "2026-03-23",
+     712.78
+    ],
+    [
+     "2026-03-30",
+     716.67
+    ],
+    [
+     "2026-04-06",
+     720.56
+    ],
+    [
+     "2026-04-13",
+     724.44
+    ],
+    [
+     "2026-04-20",
+     728.33
+    ],
+    [
+     "2026-04-27",
+     732.22
+    ],
+    [
+     "2026-05-04",
+     736.11
+    ],
+    [
+     "2026-05-11",
+     740.0
+    ],
+    [
+     "2026-05-18",
+     743.89
+    ],
+    [
+     "2026-05-25",
+     747.78
+    ],
+    [
+     "2026-06-01",
+     751.67
+    ],
+    [
+     "2026-06-08",
+     755.56
+    ],
+    [
+     "2026-06-15",
+     759.44
+    ],
+    [
+     "2026-06-22",
+     763.33
+    ],
+    [
+     "2026-06-29",
+     767.22
+    ],
+    [
+     "2026-07-06",
+     771.11
+    ],
+    [
+     "2026-07-13",
+     775.0
+    ],
+    [
+     "2026-07-20",
+     778.89
+    ],
+    [
+     "2026-07-27",
+     782.78
+    ],
+    [
+     "2026-08-03",
+     786.67
+    ],
+    [
+     "2026-08-10",
+     790.56
+    ],
+    [
+     "2026-08-17",
+     794.44
+    ],
+    [
+     "2026-08-24",
+     798.33
+    ],
+    [
+     "2026-08-31",
+     802.22
+    ],
+    [
+     "2026-09-07",
+     806.11
+    ],
+    [
+     "2026-09-14",
+     810.0
+    ],
+    [
+     "2026-09-21",
+     813.89
+    ],
+    [
+     "2026-09-28",
+     817.78
+    ],
+    [
+     "2026-10-05",
+     821.67
+    ]
+   ]
+  }
+ },
+ {
+  "url": "/api/index/prices?start=2026-09-01",
+  "status": 200,
+  "body": {
+   "ticker": "SPY",
+   "name": "S&P 500",
+   "last": 789.5,
+   "series": [
+    [
+     "2026-09-07",
+     806.11
+    ],
+    [
+     "2026-09-14",
+     810.0
+    ],
+    [
+     "2026-09-21",
+     813.89
+    ],
+    [
+     "2026-09-28",
+     817.78
+    ],
+    [
+     "2026-10-05",
+     821.67
+    ]
+   ]
+  }
+ },
+ {
+  "url": "/api/companies/aaa",
+  "status": 200,
+  "body": {
+   "t": "AAA",
+   "n": "Aaa Energy, Inc.",
+   "s": "Energy",
+   "r": 1,
+   "sc": 1.27,
+   "f": {
+    "value": 0.31,
+    "quality": 1.31,
+    "momentum": 2.31,
+    "growth": 3.31
+   },
+   "cap": 12.3,
+   "px": 87.9,
+   "d1": 0.0088,
+   "y1": 0.8568,
+   "sic": 1311,
+   "peers": 3,
+   "total": 5
+  }
+ },
+ {
+  "url": "/api/companies/BBB",
+  "status": 200,
+  "body": {
+   "t": "BBB",
+   "n": "Bbb Oil Corp",
+   "s": "Energy",
+   "r": 2,
+   "sc": 0.87,
+   "f": {
+    "value": 0.06,
+    "quality": 1.06,
+    "momentum": 2.06,
+    "growth": 3.06
+   },
+   "cap": null,
+   "px": null,
+   "d1": null,
+   "y1": null,
+   "sic": 1312,
+   "peers": 3,
+   "total": 5
+  }
+ },
+ {
+  "url": "/api/companies/DDD",
+  "status": 200,
+  "body": {
+   "t": "DDD",
+   "n": "At&T Inc.",
+   "s": "Energy",
+   "r": 4,
+   "sc": 0.07,
+   "f": {
+    "value": -0.44,
+    "quality": 0.56,
+    "momentum": 1.56,
+    "growth": 2.56
+   },
+   "cap": 49.4,
+   "px": null,
+   "d1": null,
+   "y1": null,
+   "sic": 1314,
+   "peers": 3,
+   "total": 5
+  }
+ },
+ {
+  "url": "/api/companies/AAA/prices",
+  "status": 200,
+  "body": {
+   "t": "AAA",
+   "last": 87.9,
+   "series": [
+    [
+     "2025-09-01",
+     50.0
+    ],
+    [
+     "2025-09-08",
+     50.86
+    ],
+    [
+     "2025-09-15",
+     51.73
+    ],
+    [
+     "2025-09-22",
+     52.59
+    ],
+    [
+     "2025-09-29",
+     53.46
+    ],
+    [
+     "2025-10-06",
+     54.32
+    ],
+    [
+     "2025-10-13",
+     55.19
+    ],
+    [
+     "2025-10-20",
+     56.05
+    ],
+    [
+     "2025-10-27",
+     56.91
+    ],
+    [
+     "2025-11-03",
+     57.78
+    ],
+    [
+     "2025-11-10",
+     58.64
+    ],
+    [
+     "2025-11-17",
+     59.51
+    ],
+    [
+     "2025-11-24",
+     60.37
+    ],
+    [
+     "2025-12-01",
+     61.23
+    ],
+    [
+     "2025-12-08",
+     62.1
+    ],
+    [
+     "2025-12-15",
+     62.96
+    ],
+    [
+     "2025-12-22",
+     63.83
+    ],
+    [
+     "2025-12-29",
+     64.69
+    ],
+    [
+     "2026-01-05",
+     65.56
+    ],
+    [
+     "2026-01-12",
+     66.42
+    ],
+    [
+     "2026-01-19",
+     67.28
+    ],
+    [
+     "2026-01-26",
+     68.15
+    ],
+    [
+     "2026-02-02",
+     69.01
+    ],
+    [
+     "2026-02-09",
+     69.88
+    ],
+    [
+     "2026-02-16",
+     70.74
+    ],
+    [
+     "2026-02-23",
+     71.6
+    ],
+    [
+     "2026-03-02",
+     72.47
+    ],
+    [
+     "2026-03-09",
+     73.33
+    ],
+    [
+     "2026-03-16",
+     74.2
+    ],
+    [
+     "2026-03-23",
+     75.06
+    ],
+    [
+     "2026-03-30",
+     75.93
+    ],
+    [
+     "2026-04-06",
+     76.79
+    ],
+    [
+     "2026-04-13",
+     77.65
+    ],
+    [
+     "2026-04-20",
+     78.52
+    ],
+    [
+     "2026-04-27",
+     79.38
+    ],
+    [
+     "2026-05-04",
+     80.25
+    ],
+    [
+     "2026-05-11",
+     81.11
+    ],
+    [
+     "2026-05-18",
+     81.98
+    ],
+    [
+     "2026-05-25",
+     82.84
+    ],
+    [
+     "2026-06-01",
+     83.7
+    ],
+    [
+     "2026-06-08",
+     84.57
+    ],
+    [
+     "2026-06-15",
+     85.43
+    ],
+    [
+     "2026-06-22",
+     86.3
+    ],
+    [
+     "2026-06-29",
+     87.16
+    ],
+    [
+     "2026-07-06",
+     88.02
+    ],
+    [
+     "2026-07-13",
+     88.89
+    ],
+    [
+     "2026-07-20",
+     89.75
+    ],
+    [
+     "2026-07-27",
+     90.62
+    ],
+    [
+     "2026-08-03",
+     91.48
+    ],
+    [
+     "2026-08-10",
+     92.35
+    ],
+    [
+     "2026-08-17",
+     93.21
+    ],
+    [
+     "2026-08-24",
+     94.07
+    ],
+    [
+     "2026-08-31",
+     94.94
+    ],
+    [
+     "2026-09-07",
+     95.8
+    ],
+    [
+     "2026-09-14",
+     96.67
+    ],
+    [
+     "2026-09-21",
+     97.53
+    ],
+    [
+     "2026-09-28",
+     98.4
+    ],
+    [
+     "2026-10-05",
+     99.26
+    ]
+   ]
+  }
+ },
+ {
+  "url": "/api/companies/AAA/prices?start=2026-08-15",
+  "status": 200,
+  "body": {
+   "t": "AAA",
+   "last": 87.9,
+   "series": [
+    [
+     "2026-08-17",
+     93.21
+    ],
+    [
+     "2026-08-24",
+     94.07
+    ],
+    [
+     "2026-08-31",
+     94.94
+    ],
+    [
+     "2026-09-07",
+     95.8
+    ],
+    [
+     "2026-09-14",
+     96.67
+    ],
+    [
+     "2026-09-21",
+     97.53
+    ],
+    [
+     "2026-09-28",
+     98.4
+    ],
+    [
+     "2026-10-05",
+     99.26
+    ]
+   ]
+  }
+ },
+ {
+  "url": "/api/companies/DDD/prices",
+  "status": 200,
+  "body": {
+   "t": "DDD",
+   "last": null,
+   "series": []
+  }
+ },
+ {
+  "url": "/api/companies/AAA/factors",
+  "status": 200,
+  "body": {
+   "t": "AAA",
+   "keys": [
+    "value",
+    "quality",
+    "momentum",
+    "growth",
+    "score"
+   ],
+   "rows": [
+    [
+     "2025-09-30",
+     0.31,
+     1.31,
+     2.31,
+     3.31,
+     1.25
+    ],
+    [
+     "2026-08-31",
+     0.31,
+     1.31,
+     2.31,
+     3.31,
+     1.26
+    ],
+    [
+     "2026-09-30",
+     0.31,
+     1.31,
+     2.31,
+     3.31,
+     1.27
+    ]
+   ]
+  }
+ },
+ {
+  "url": "/api/companies/FFF/factors",
+  "status": 200,
+  "body": {
+   "t": "FFF",
+   "keys": [
+    "value",
+    "quality",
+    "momentum",
+    "growth",
+    "score"
+   ],
+   "rows": [
+    [
+     "2026-08-31",
+     -0.94,
+     0.06,
+     1.06,
+     2.06,
+     -0.74
+    ],
+    [
+     "2026-09-30",
+     -0.94,
+     0.06,
+     1.06,
+     2.06,
+     -0.73
+    ]
+   ]
+  }
+ },
+ {
+  "url": "/api/companies/AAA/metrics",
+  "status": 200,
+  "body": {
+   "t": "AAA",
+   "sector": "Energy",
+   "peers": 3,
+   "metrics": [
+    {
+     "k": "earnings_yield",
+     "f": "value",
+     "label": "Rentabilidad del beneficio",
+     "v": -0.0877,
+     "med": -0.0753,
+     "z": 0.56,
+     "better": "high"
+    },
+    {
+     "k": "ebitda_ev",
+     "f": "value",
+     "label": "EBITDA / valor empresa",
+     "v": -0.0753,
+     "med": -0.0506,
+     "z": 0.66,
+     "better": "high"
+    },
+    {
+     "k": "fcf_yield",
+     "f": "value",
+     "label": "Rentabilidad caja libre",
+     "v": -0.063,
+     "med": 0.0481,
+     "z": 0.76,
+     "better": "high"
+    },
+    {
+     "k": "roe",
+     "f": "quality",
+     "label": "ROE",
+     "v": null,
+     "med": 0.0481,
+     "z": 0.86,
+     "better": "high"
+    },
+    {
+     "k": "gross_margin",
+     "f": "quality",
+     "label": "Margen bruto",
+     "v": -0.0383,
+     "med": 0.0235,
+     "z": 0.96,
+     "better": "high"
+    },
+    {
+     "k": "op_margin",
+     "f": "quality",
+     "label": "Margen operativo",
+     "v": -0.0259,
+     "med": 0.0481,
+     "z": 1.06,
+     "better": "high"
+    },
+    {
+     "k": "debt_assets",
+     "f": "quality",
+     "label": "Deuda / activos",
+     "v": -0.0136,
+     "med": 0.0728,
+     "z": 1.16,
+     "better": "low"
+    },
+    {
+     "k": "mom_12_1",
+     "f": "momentum",
+     "label": "Subida 12 meses (sin el último)",
+     "v": -0.0012,
+     "med": 0.0975,
+     "z": 1.26,
+     "better": "high"
+    },
+    {
+     "k": "rev_growth",
+     "f": "growth",
+     "label": "Crecimiento ventas",
+     "v": 0.0111,
+     "med": 0.1222,
+     "z": 1.35,
+     "better": "high"
+    },
+    {
+     "k": "ni_growth",
+     "f": "growth",
+     "label": "Crecimiento beneficio",
+     "v": null,
+     "med": null,
+     "z": 1.46,
+     "better": "high"
+    }
+   ]
+  }
+ },
+ {
+  "url": "/api/companies/CCC/metrics",
+  "status": 200,
+  "body": {
+   "t": "CCC",
+   "sector": "Utilities",
+   "peers": 1,
+   "metrics": [
+    {
+     "k": "earnings_yield",
+     "f": "value",
+     "label": "Rentabilidad del beneficio",
+     "v": -0.063,
+     "med": -0.063,
+     "z": -0.18,
+     "better": "high"
+    },
+    {
+     "k": "ebitda_ev",
+     "f": "value",
+     "label": "EBITDA / valor empresa",
+     "v": -0.0259,
+     "med": -0.0259,
+     "z": -0.08,
+     "better": "high"
+    },
+    {
+     "k": "fcf_yield",
+     "f": "value",
+     "label": "Rentabilidad caja libre",
+     "v": 0.0111,
+     "med": 0.0111,
+     "z": 0.02,
+     "better": "high"
+    },
+    {
+     "k": "roe",
+     "f": "quality",
+     "label": "ROE",
+     "v": 0.0481,
+     "med": 0.0481,
+     "z": 0.12,
+     "better": "high"
+    },
+    {
+     "k": "gross_margin",
+     "f": "quality",
+     "label": "Margen bruto",
+     "v": 0.0852,
+     "med": 0.0852,
+     "z": 0.22,
+     "better": "high"
+    },
+    {
+     "k": "op_margin",
+     "f": "quality",
+     "label": "Margen operativo",
+     "v": 0.1222,
+     "med": 0.1222,
+     "z": 0.32,
+     "better": "high"
+    },
+    {
+     "k": "debt_assets",
+     "f": "quality",
+     "label": "Deuda / activos",
+     "v": 0.1593,
+     "med": 0.1593,
+     "z": 0.42,
+     "better": "low"
+    },
+    {
+     "k": "mom_12_1",
+     "f": "momentum",
+     "label": "Subida 12 meses (sin el último)",
+     "v": 0.1963,
+     "med": 0.1963,
+     "z": 0.52,
+     "better": "high"
+    },
+    {
+     "k": "rev_growth",
+     "f": "growth",
+     "label": "Crecimiento ventas",
+     "v": 0.2333,
+     "med": 0.2333,
+     "z": 0.62,
+     "better": "high"
+    },
+    {
+     "k": "ni_growth",
+     "f": "growth",
+     "label": "Crecimiento beneficio",
+     "v": 0.2704,
+     "med": 0.2704,
+     "z": 0.72,
+     "better": "high"
+    }
+   ]
+  }
+ },
+ {
+  "url": "/api/companies/EEE",
+  "status": 404,
+  "body": {
+   "detail": "EEE no está en el ranking actual"
+  }
+ },
+ {
+  "url": "/api/companies/ZZZ",
+  "status": 404,
+  "body": {
+   "detail": "ZZZ no está en el ranking actual"
+  }
+ },
+ {
+  "url": "/api/companies/ZZZ/metrics",
+  "status": 404,
+  "body": {
+   "detail": "ZZZ no está en el ranking actual"
+  }
+ },
+ {
+  "url": "/api/health",
+  "status": 200,
+  "body": {
+   "ok": true
+  }
+ },
+ {
+  "url": "/api/ranking?limit=0",
+  "status": 422,
+  "body": null
+ },
+ {
+  "url": "/api/ranking?limit=601",
+  "status": 422,
+  "body": null
+ },
+ {
+  "url": "/api/ranking?offset=-1",
+  "status": 422,
+  "body": null
+ },
+ {
+  "url": "/api/ranking?date=ayer",
+  "status": 422,
+  "body": null
+ }
+]

@@ -97,6 +97,26 @@ services:
         condition: service_completed_successfully
     restart: unless-stopped
 
+  gateway:
+    build:
+      context: .
+      dockerfile: services/gateway/Dockerfile
+    image: trlavanda-gateway
+    environment:
+      KAFKA_BOOTSTRAP: kafka:29092
+      INGEST_URL: http://ingest:8000
+      FACTORS_URL: http://factors:8000
+    ports:
+      - "127.0.0.1:8000:8000"   # la API que usa la web (web/js/config.js)
+    depends_on:
+      kafka:
+        condition: service_healthy
+      ingest:
+        condition: service_started
+      factors:
+        condition: service_started
+    restart: unless-stopped
+
   kafka-ui:
     image: kafbat/kafka-ui:v1.3.0
     environment:

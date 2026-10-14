@@ -1,0 +1,21 @@
+{
+  "_comment": "Factores del ranking: qué métricas forman cada uno, su signo (+1: más alto es mejor; -1: más bajo es mejor) y su etiqueta. Python (screener.FACTORS) y Go (gateway) leen este archivo; un test comprueba que coinciden.",
+  "factors": {
+    "value": [["earnings_yield", 1], ["ebitda_ev", 1], ["fcf_yield", 1]],
+    "quality": [["roe", 1], ["gross_margin", 1], ["op_margin", 1], ["debt_assets", -1]],
+    "momentum": [["mom_12_1", 1]],
+    "growth": [["rev_growth", 1], ["ni_growth", 1]]
+  },
+  "labels": {
+    "earnings_yield": "Rentabilidad del beneficio",
+    "ebitda_ev": "EBITDA / valor empresa",
+    "fcf_yield": "Rentabilidad caja libre",
+    "roe": "ROE",
+    "gross_margin": "Margen bruto",
+    "op_margin": "Margen operativo",
+    "debt_assets": "Deuda / activos",
+    "mom_12_1": "Subida 12 meses (sin el último)",
+    "rev_growth": "Crecimiento ventas",
+    "ni_growth": "Crecimiento beneficio"
+  }
+}

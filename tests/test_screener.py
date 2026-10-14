@@ -36,3 +36,15 @@ def test_ranking_ordenado_por_score():
     ranked = df.sort("rank")
     assert ranked["rank"].to_list() == list(range(1, df.height + 1))
     assert ranked["score"].is_sorted(descending=True)
+
+
+def test_factores_coinciden_con_el_contrato():
+    """El gateway (Go) lee contracts/factors.json: tiene que describir lo que calcula Python."""
+    import json
+
+    from trlavanda.bus import CONTRACTS_DIR
+
+    contract = json.loads((CONTRACTS_DIR / "factors.json").read_text("utf-8"))
+    assert {k: [tuple(m) for m in v] for k, v in contract["factors"].items()} == FACTORS
+    assert list(contract["factors"]) == list(FACTORS)  # el orden también importa
+    assert set(contract["labels"]) == set(METRICS)

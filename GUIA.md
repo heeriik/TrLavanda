@@ -54,12 +54,17 @@ Para tener datos frescos: `uv run trl-datos` y luego `uv run trl-ranking --rebui
 
 ## 4a. Web (estilo app de bolsa) y API
 
-La web es HTML/CSS/JS (carpeta `web/`) y pide los datos a la API. En local:
+La web es HTML/CSS/JS (carpeta `web/`) y pide los datos al **gateway** (Go, http://localhost:8000).
 
 ```powershell
-uv run trl-update                                          # datos al día (~30 s si ya hay datos)
-uv run trl-api                                             # API en http://localhost:8000 (docs: /docs)
+docker compose up -d                                       # todo el sistema, incluido el gateway
 uv run python -m http.server 8600 --directory web          # web en http://localhost:8600
+```
+
+Sin Docker, el gateway puede servir directamente la carpeta `data/` (después de `uv run trl-update`):
+
+```powershell
+go run ./services/gateway/cmd/gateway -local data
 ```
 
 `uv run trl-web --publish` publica la interfaz en GitHub Pages (https://heeriik.github.io/TrLavanda/).

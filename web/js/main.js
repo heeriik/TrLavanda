@@ -25,7 +25,7 @@ async function route() {
     await startWatching();
   } catch (e) {
     root.innerHTML = `<div class="error">No se puede conectar con la API.<br>
-      <small>Arráncala con <code>uv run trl-api</code> · ${esc(e.message)}</small></div>`;
+      <small>Arráncala con <code>docker compose up -d</code> · ${esc(e.message)}</small></div>`;
     return;
   }
   window.addEventListener("hashchange", route);

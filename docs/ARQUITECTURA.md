@@ -131,6 +131,21 @@ pregunta a ingest por `/datasets/{name}/latest`.
 El almacén de versiones, sus endpoints y la descarga verificada son comunes (`trlavanda.versions`,
 `trlavanda.versions_api`); el screener recibe sus archivos de entrada como parámetro (`screener.Inputs`).
 
+## Gateway (Go)
+
+- **Carga**: al arrancar pide a factors e ingest la última versión de `scores`, `prices` y `universe`
+  (`/datasets/{name}/latest`), comprueba el sha256 de cada archivo y construye los datos en memoria.
+- **Al día**: escucha `scores.published` y `data.updated` desde el final del topic y **sin grupo de
+  consumidores** (cada réplica necesita todos los eventos). Como no confirma mensajes, si una descarga
+  falla el evento no se repite: por eso además revisa por HTTP cada 5 min.
+- **Cambio atómico**: cada versión nueva crea otro `data.Data` y se publica con un `atomic.Pointer`; las
+  peticiones en curso terminan con el anterior.
+- **Paridad**: `testdata/golden.json` son las respuestas de la API de referencia en Python sobre datos
+  sintéticos con casos difíciles (redondeo al par de Python, `str.title()`, NaN frente a nulo, mediana
+  de Polars). `go test ./...` las compara valor a valor.
+- **Modo local**: `go run ./services/gateway/cmd/gateway -local data` sirve la carpeta `data/` sin Kafka.
+- Imagen de 65 MB (binario estático); las de Python pesan 1,35 GB.
+
 ## Hitos
 
 | # | Hito | Hecho cuando |
@@ -139,7 +154,7 @@ El almacén de versiones, sus endpoints y la descarga verificada son comunes (`t
 | 1 | Retirar Streamlit, `contracts/` (JSON Schema + topics), `trlavanda.bus`, imagen Python, compose con Kafka + Kafka UI. El core se queda en `src/trlavanda` (moverlo no aportaba nada) | `docker compose up kafka` funciona; los tests siguen pasando |
 | 2 | ✅ Servicio **ingest** (`services/ingest`): consume `cmd.ingest`, versiona (`versions/<dataset>/<v>/` + `LATEST`), publica `data.updated` y sirve los archivos por HTTP (:8001 desde el PC) | Probado de punta a punta el 2026-10-14, incluido un reinicio a mitad de trabajo |
 | 3 | ✅ Servicio **factors** (`services/factors`): consume `data.updated` con *debounce*, descarga las versiones de ingest por HTTP (verificando sha256), calcula y publica `scores.published` (:8002 desde el PC) | Probado el 2026-10-14: 3 eventos → 1 cálculo; ranking idéntico al del prototipo |
-| 4 | **gateway en Go** con paridad respecto a la FastAPI (tests "golden" con las mismas fixtures sintéticas de `tests/test_api.py`); la web apunta a él; se borra `src/trlavanda/api` | La web local funciona contra el gateway Go |
+| 4 | ✅ **gateway en Go** (`services/gateway`): carga por HTTP, se mantiene al día con Kafka y revisión cada 5 min; paridad con la FastAPI comprobada (32 respuestas golden + 381 URLs con datos reales, 0 diferencias); FastAPI retirada | La web local funciona contra el gateway (2026-10-14) |
 | 5 | **scheduler** Go + resiliencia (reintentos con backoff, DLQ, idempotencia) + logs JSON con `correlation_id` + `/healthz` | Matar un servicio a mitad no corrompe datos y al volver se recupera solo |
 | 6 | **Despliegue**: imágenes multi-arquitectura (`docker buildx`, arm64), VM Oracle, Cloudflare Tunnel, `PROD_API_BASE` en la web | https://heeriik.github.io/TrLavanda/ muestra datos del sistema desplegado |
 | 7 | Servicio **backtest** (fase 3) y curva estrategia vs SPY en la web | — |

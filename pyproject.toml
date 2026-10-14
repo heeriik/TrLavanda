@@ -15,7 +15,6 @@ dependencies = [
     "statsmodels>=0.14",
     "tqdm>=4.66",
     "fastapi>=0.115",
-    "uvicorn>=0.30",
     "confluent-kafka>=2.16",
     "jsonschema>=4.23",
 ]
@@ -24,7 +23,6 @@ dependencies = [
 trl-datos = "trlavanda.pipelines.download_data:main"
 trl-ranking = "trlavanda.pipelines.ranking:main"
 trl-web = "trlavanda.pipelines.web:main"
-trl-api = "trlavanda.pipelines.api:main"
 trl-update = "trlavanda.pipelines.update:main"
 trl-bus = "trlavanda.bus:main"
 
@@ -43,7 +41,7 @@ dev = [
 ]
 
 [tool.uv.workspace]
-members = ["services/*"]
+members = ["services/ingest", "services/factors"]  # solo los servicios Python
 
 [tool.uv.sources]
 trlavanda-ingest = { workspace = true }

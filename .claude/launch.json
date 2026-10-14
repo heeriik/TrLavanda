@@ -2,17 +2,6 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "trlavanda-api",
-      "runtimeExecutable": "uv",
-      "runtimeArgs": [
-        "run",
-        "trl-api",
-        "--port",
-        "8000"
-      ],
-      "port": 8000
-    },
-    {
       "name": "trlavanda-web",
       "runtimeExecutable": "uv",
       "runtimeArgs": [
@@ -25,6 +14,19 @@
         "web"
       ],
       "port": 8600
+    },
+    {
+      "name": "trlavanda-gateway-local",
+      "runtimeExecutable": "go",
+      "runtimeArgs": [
+        "run",
+        "./services/gateway/cmd/gateway",
+        "-local",
+        "data",
+        "-addr",
+        "127.0.0.1:8000"
+      ],
+      "port": 8000
     }
   ]
 }

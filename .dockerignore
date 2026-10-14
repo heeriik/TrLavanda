@@ -14,3 +14,4 @@ prompts
 tests
 services/*/tests
 services/*/Dockerfile
+services/gateway/testdata

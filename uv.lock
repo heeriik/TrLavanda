@@ -2234,7 +2234,6 @@ dependencies = [
     { name = "python-dotenv" },
     { name = "statsmodels" },
     { name = "tqdm" },
-    { name = "uvicorn" },
     { name = "yfinance" },
 ]
 
@@ -2264,7 +2263,6 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.0" },
     { name = "statsmodels", specifier = ">=0.14" },
     { name = "tqdm", specifier = ">=4.66" },
-    { name = "uvicorn", specifier = ">=0.30" },
     { name = "yfinance", specifier = ">=0.2.50" },
 ]
 

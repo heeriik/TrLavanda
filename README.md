@@ -59,8 +59,7 @@ uv sync                          # entorno e instalación
 cp .env.example .env             # pon un email de contacto en SEC_USER_AGENT (lo exige la SEC)
 uv run trl-datos                 # descarga (~10 min la primera vez)
 uv run trl-ranking               # ranking actual en la terminal
-uv run trl-api                   # API en http://localhost:8000 (la web local la usa)
-docker compose up -d             # Kafka + topics + Kafka UI (http://localhost:8080)
+docker compose up -d             # sistema completo: Kafka, ingest, factors, gateway (API :8000), Kafka UI (:8080)
 uv run trl-ranking --date 2020-03-31 --sector "Health Care"
 uv run pytest
 ```
@@ -75,10 +74,10 @@ src/trlavanda/
   data/        universe.py · prices.py · edgar.py
   factors/     fundamentals.py · sectors.py · screener.py
   backtest/    (fase 3)
-  api/         API FastAPI (referencia del futuro gateway en Go)
   bus.py       eventos sobre Kafka (validados con contracts/)
-  pipelines/   trl-datos · trl-ranking · trl-update · trl-api · trl-bus · trl-web
-services/      servicios del sistema distribuido: ingest (descarga y versiona los datos), factors (calcula el ranking)
+  versions.py  versiones inmutables de datasets (guardar, servir, descargar)
+  pipelines/   trl-datos · trl-ranking · trl-update · trl-bus · trl-web
+services/      servicios: ingest y factors (Python), gateway (Go: la API de la web)
 tests/         pytest
 contracts/     JSON Schema de los eventos y lista de topics de Kafka
 web/           interfaz HTML/CSS/JS
@@ -89,7 +88,7 @@ prompts/       instrucciones para investigación cualitativa de empresas chinas 
 
 ## Stack
 
-Python 3.14 · Polars · statsmodels · FastAPI · Kafka · Docker · HTML/CSS/JS + TradingView Lightweight Charts · GitHub Pages · yfinance · SEC EDGAR API · uv · pytest · ruff
+Python 3.14 · Polars · statsmodels · Go · FastAPI · Kafka · Docker · HTML/CSS/JS + TradingView Lightweight Charts · GitHub Pages · yfinance · SEC EDGAR API · uv · pytest · ruff
 
 ## Licencia
 

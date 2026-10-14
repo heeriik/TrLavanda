@@ -3,7 +3,7 @@ package data
 import (
 	"os"
 
-	"github.com/heeriik/TrLavanda/services/gateway/internal/contracts"
+	"github.com/heeriik/TrLavanda/libs/go/contracts"
 )
 
 // Files: rutas locales de los cuatro archivos que necesita el gateway.

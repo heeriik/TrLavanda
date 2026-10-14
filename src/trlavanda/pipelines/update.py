@@ -9,6 +9,7 @@ servicios ingest y factors; el gateway puede servir data/ en modo local:
     go run ./services/gateway/cmd/gateway -local data
 """
 
+import logging
 import sys
 import time
 
@@ -17,6 +18,7 @@ from trlavanda.pipelines import download_data
 
 
 def main() -> None:
+    logging.basicConfig(level=logging.INFO, format="    %(message)s")
     t0 = time.monotonic()
     download_data.main()  # lee los mismos argumentos (--full, --sample...)
 

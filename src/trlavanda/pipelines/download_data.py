@@ -9,6 +9,7 @@ Los pasos están en `trlavanda.data.ingest` (el servicio ingest usa los mismos).
 """
 
 import argparse
+import logging
 import time
 from datetime import date
 
@@ -16,6 +17,7 @@ from trlavanda.data import ingest, prices
 
 
 def main() -> None:
+    logging.basicConfig(level=logging.INFO, format="    %(message)s")
     parser = argparse.ArgumentParser(description="Ingesta de datos (incremental)")
     parser.add_argument("--full", action="store_true", help="descargar todo desde cero")
     parser.add_argument("--sample", type=int, default=None, help="limitar a N tickers")

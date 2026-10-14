@@ -21,10 +21,17 @@ type Metric struct {
 	Label  string
 }
 
+// Topic: configuración de un topic de Kafka (contracts/topics.json).
+type Topic struct {
+	Event string `json:"event"` // tipo de evento (= esquema) que llevan sus mensajes
+	Key   string `json:"key"`   // campo de `data` que se usa como clave (o ese texto si no existe)
+}
+
 type Contracts struct {
 	Dir     string
 	Factors []string // en el orden del contrato (value, quality, momentum, growth)
 	Metrics []Metric // todas, en orden
+	Topics  map[string]Topic
 	schemas map[string]*jsonschema.Schema
 }
 
@@ -55,6 +62,9 @@ func Load(dir string) (*Contracts, error) {
 	c := &Contracts{Dir: dir, schemas: map[string]*jsonschema.Schema{}}
 	if err := c.loadFactors(); err != nil {
 		return nil, fmt.Errorf("factors.json: %w", err)
+	}
+	if err := c.loadTopics(); err != nil {
+		return nil, fmt.Errorf("topics.json: %w", err)
 	}
 	if err := c.loadSchemas(); err != nil {
 		return nil, fmt.Errorf("esquemas de eventos: %w", err)
@@ -100,6 +110,21 @@ func (c *Contracts) loadFactors() error {
 			c.Metrics = append(c.Metrics, Metric{Key: key, Factor: factor, Sign: int(sign), Label: label})
 		}
 	}
+	return nil
+}
+
+func (c *Contracts) loadTopics() error {
+	raw, err := os.ReadFile(filepath.Join(c.Dir, "topics.json"))
+	if err != nil {
+		return err
+	}
+	var doc struct {
+		Topics map[string]Topic `json:"topics"`
+	}
+	if err := json.Unmarshal(raw, &doc); err != nil {
+		return err
+	}
+	c.Topics = doc.Topics
 	return nil
 }
 

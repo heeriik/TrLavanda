@@ -145,7 +145,66 @@ def test_mensaje_invalido_va_a_la_dlq(topic):
         [f"{topic}.dlq"],
         group_id=f"test-dlq-{marca}",
         handler=en_dlq.append,
-        stop=lambda: any(marca in m for m in en_dlq),
+        stop=lambda: any(marca in m["value"] for m in en_dlq),
         raw=True,
     )
-    assert any(marca in m for m in en_dlq)
+    roto = next(m for m in en_dlq if marca in m["value"])
+    assert "no cumple el contrato" in roto["headers"]["error"]
+
+
+@pytest.mark.kafka
+@kafka
+def test_manejador_que_falla_reintenta_y_acaba_en_la_dlq(topic):
+    marca = uuid.uuid4().hex
+    enviado = bus.Publisher(source="test").publish(topic, status(marca))
+    intentos = []
+
+    def falla(ev):
+        if ev["id"] == enviado["id"]:
+            intentos.append(1)
+            raise RuntimeError(f"servicio externo caído {marca}")
+
+    vistos = []
+    bus.consume(
+        [topic],
+        group_id=f"test-{marca}",
+        handler=lambda ev: (vistos.append(ev["id"]), falla(ev)),
+        stop=lambda: enviado["id"] in vistos and len(intentos) >= 3,
+        retries=2,
+        backoff_s=0.01,
+    )
+    assert len(intentos) == 3  # 1 intento + 2 reintentos
+
+    en_dlq = []
+    bus.consume(
+        [f"{topic}.dlq"],
+        group_id=f"test-dlq-{marca}",
+        handler=en_dlq.append,
+        stop=lambda: any(marca in m["headers"].get("error", "") for m in en_dlq),
+        raw=True,
+    )
+    m = next(m for m in en_dlq if marca in m["headers"].get("error", ""))
+    assert m["headers"]["attempts"] == "3"
+    assert json.loads(m["value"])["id"] == enviado["id"]  # el mensaje original, intacto
+
+
+def test_reintentos_con_espera_creciente(monkeypatch):
+    esperas = []
+    monkeypatch.setattr(bus.time, "sleep", lambda s: esperas.append(s))
+    reloj = iter(range(0, 10_000))
+    monkeypatch.setattr(bus.time, "monotonic", lambda: next(reloj))
+    llamadas = []
+
+    def falla_dos_veces(ev):
+        llamadas.append(ev)
+        if len(llamadas) < 3:
+            raise ConnectionError("SEC no responde")
+
+    bus._handle_with_retries(falla_dos_veces, {"id": 1}, retries=2, backoff_s=5, stop=lambda: False)
+    assert len(llamadas) == 3
+
+    with pytest.raises(ConnectionError):
+        llamadas.clear()
+        bus._handle_with_retries(
+            falla_dos_veces, {"id": 1}, retries=1, backoff_s=5, stop=lambda: False
+        )

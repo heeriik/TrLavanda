@@ -16,6 +16,7 @@ corregido algo), se vuelve a descargar la historia completa de ESE ticker.
 Limitación conocida: Yahoo no suele tener datos de empresas deslistadas.
 """
 
+import logging
 from datetime import date, timedelta
 
 import pandas as pd
@@ -30,6 +31,8 @@ BASE_COLS = ["date", "ticker", "close", "volume", "dividends", "splits"]
 
 OVERLAP_DAYS = 10  # días que se vuelven a pedir para comprobar que nada ha cambiado
 STALE_DAYS = 30  # un ticker sin precio en 30 días se da por deslistado y no se consulta
+log = logging.getLogger(__name__)
+
 MAX_DIFF = 0.005  # diferencia relativa (0,5 %) a partir de la cual se rehace el ticker
 
 
@@ -164,7 +167,7 @@ def update_prices(
     window = fetch(active, (today - timedelta(OVERLAP_DAYS)).isoformat(), desc="incremental")
     redo = needs_full_refetch(old, window)
     if redo:
-        print(f"    Split o corrección en {sorted(redo)}: se descarga su historia completa")
+        log.info("Split o corrección en %s: se descarga su historia completa", sorted(redo))
     redo_hist = fetch(sorted(redo), START_DATE, desc="rehacer")
 
     prices = merge(old.filter(~pl.col("ticker").is_in(sorted(redo))), window)

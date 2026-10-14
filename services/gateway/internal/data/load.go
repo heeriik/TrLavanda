@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/heeriik/TrLavanda/services/gateway/internal/contracts"
+	"github.com/heeriik/TrLavanda/libs/go/contracts"
 )
 
 // ScoreRow es una fila del ranking: una empresa en una fecha.

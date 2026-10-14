@@ -10,7 +10,7 @@ import threading
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 
 from trlavanda.bus import Publisher, consume
 from trlavanda.config import DATA_DIR
@@ -70,4 +70,13 @@ app.include_router(versions_router(lambda: store))
 
 @app.get("/healthz")
 def healthz() -> dict:
+    """Vivo: el proceso responde."""
     return {"ok": True, "consumer": consumer_alive.is_set()}
+
+
+@app.get("/readyz")
+def readyz(response: Response) -> dict:
+    """Listo para trabajar: el consumidor de Kafka está en marcha."""
+    if not consumer_alive.is_set():
+        response.status_code = 503
+    return {"ready": consumer_alive.is_set()}

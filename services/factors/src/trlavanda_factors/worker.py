@@ -6,6 +6,8 @@ Por eso cada evento solo se APUNTA (en disco, antes de confirmarlo a Kafka) y el
 empieza cuando pasan DEBOUNCE_S segundos sin eventos nuevos.
 
 Si el servicio se cae con trabajo pendiente, al volver lo encuentra apuntado y lo hace.
+Si el cálculo falla, se reintenta con espera creciente (60 s, 4 min, 16 min). Si sigue fallando,
+el evento que lo disparó va a `data.updated.dlq` con el error y se deja de insistir.
 Idempotencia: si las versiones de entrada Y la versión del método (screener.METHOD_VERSION) son
 las del último cálculo, no se repite. Si cambia el código del cálculo, se recalcula al arrancar.
 """
@@ -21,6 +23,7 @@ import polars as pl
 
 from trlavanda.bus import Publisher
 from trlavanda.factors.screener import METHOD_VERSION
+from trlavanda.logs import correlation_id
 from trlavanda.versions import VersionStore, fetch_version, prune_local
 from trlavanda_factors.compute import REQUIRED, compute_scores
 
@@ -28,6 +31,8 @@ log = logging.getLogger(__name__)
 
 SERVICE = "factors"
 DEBOUNCE_S = 15
+MAX_RETRIES = 3
+BACKOFF_S = 60
 
 
 class Worker:
@@ -43,6 +48,7 @@ class Worker:
         compute: Callable[[dict[str, Path], Path], Path] = compute_scores,
         latest_url: Callable[[str], str | None] | None = None,
         debounce_s: float = DEBOUNCE_S,
+        backoff_s: float = BACKOFF_S,
         clock: Callable[[], float] = time.monotonic,
     ):
         self.publisher = publisher
@@ -54,6 +60,8 @@ class Worker:
         self.compute = compute
         self.latest_url = latest_url or self._latest_from_ingest
         self.debounce_s = debounce_s
+        self.backoff_s = backoff_s
+        self._retry_at = 0.0
         self.clock = clock
         self.state_path = data_dir / "state.json"
         self.state = self._load()
@@ -87,12 +95,44 @@ class Worker:
         self.state["inputs"][d["dataset"]] = {"version": d["version"], "url": d["url"]}
         self.state["pending"] = True
         self.state["correlation_id"] = event["correlation_id"]
+        self.state["trigger"] = event  # por si hay que mandarlo a la DLQ
+        self.state["attempts"] = 0  # datos nuevos: se empieza a contar de cero
         self._save()
         self._last_event = self.clock()
+        self._retry_at = 0.0
 
     def on_idle(self) -> None:
-        if self.state["pending"] and self.clock() - self._last_event >= self.debounce_s:
+        if not self.state["pending"] or self.clock() - self._last_event < self.debounce_s:
+            return
+        if self.clock() < self._retry_at:
+            return  # esperando para reintentar
+        token = correlation_id.set(self.state["correlation_id"])
+        try:
             self.run()
+        except Exception as e:
+            self._failed(e)
+        finally:
+            correlation_id.reset(token)
+
+    def _failed(self, error: Exception) -> None:
+        attempts = self.state.get("attempts", 0) + 1
+        if attempts > MAX_RETRIES:
+            trigger = self.state.get("trigger") or {}
+            self.publisher.dead_letter(
+                "data.updated",
+                trigger.get("data", {}).get("dataset", ""),
+                trigger,
+                repr(error),
+                attempts=attempts,
+            )
+            self.status("failed", detail=f"abandonado tras {attempts} intentos: {error!r}"[:500])
+            self.state |= {"pending": False, "attempts": 0}
+        else:
+            wait = self.backoff_s * 4 ** (attempts - 1)
+            log.warning("Cálculo fallido (intento %d): se reintenta en %.0f s", attempts, wait)
+            self._retry_at = self.clock() + wait
+            self.state["attempts"] = attempts
+        self._save()
 
     # ---------- cálculo ----------
 
@@ -105,6 +145,7 @@ class Worker:
         return f"{self.ingest_url}/datasets/{dataset}/versions/{r.json()['version']}"
 
     def status(self, state: str, **extra) -> None:
+        log.info("factors:scores: %s %s", state, extra.get("detail", ""))
         self.publisher.publish(
             "jobs.status",
             {"service": SERVICE, "job": "factors:scores", "state": state, **extra},
@@ -142,7 +183,7 @@ class Worker:
             manifest = self.store.publish("scores", meta={"inputs": versions})
         except Exception as e:
             self.status("failed", detail=repr(e)[:500], duration_s=time.monotonic() - t0)
-            raise  # sigue pendiente: al reiniciar se reintenta
+            raise  # sigue pendiente: on_idle decide si reintentar o abandonar
 
         event = None
         if manifest is not None:
@@ -157,7 +198,7 @@ class Worker:
                 },
                 correlation_id=self.state["correlation_id"],
             )
-        self.state |= {"pending": False, "computed_inputs": versions}
+        self.state |= {"pending": False, "computed_inputs": versions, "attempts": 0}
         self._save()
         self.status(
             "succeeded",

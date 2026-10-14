@@ -8,6 +8,7 @@ que Yahoo no tiene...) para no repetir trabajo.
 """
 
 import json
+import logging
 from datetime import date, timedelta
 
 import polars as pl
@@ -20,6 +21,8 @@ COVERAGE_PATH = PROCESSED_DIR / "coverage_report.json"
 MEMBERSHIP_PATH = PROCESSED_DIR / "sp500_membership.parquet"
 TICKER_CIK_PATH = PROCESSED_DIR / "ticker_cik.parquet"
 EDGAR_LOOKBACK_DAYS = 7  # el índice de la SEC va con unos días de retraso
+
+log = logging.getLogger(__name__)
 
 
 def load_state() -> dict:
@@ -67,7 +70,7 @@ def step_edgar(tickers: list[str], state: dict, full: bool = False) -> dict:
     if last_check and not full:
         since = date.fromisoformat(last_check) - timedelta(EDGAR_LOOKBACK_DAYS)
         force = edgar.recent_filers(client, since, today) & set(ciks)
-        print(f"    {len(force)} empresas con 10-K/10-Q nuevos desde {since}")
+        log.info("%d empresas con 10-K/10-Q nuevos desde %s", len(force), since)
 
     missing_facts = edgar.download_facts(ciks, client, force=force, refresh=full)
     edgar.download_company_meta(ciks, client, refresh=full)

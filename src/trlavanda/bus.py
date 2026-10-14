@@ -9,6 +9,8 @@
   manejadores tienen que ser idempotentes.
 - Un mensaje que no cumple el contrato no se puede arreglar reintentando: va a `<topic>.dlq`
   (dead letter queue) y se sigue con el siguiente, en vez de bloquear el topic para siempre.
+- Si el manejador falla (la SEC no responde...), se reintenta con espera creciente (backoff
+  exponencial). Si sigue fallando, el mensaje va a la DLQ con el error en sus cabeceras.
 
 Uso desde la terminal (con Kafka arrancado: `docker compose up -d`):
     uv run trl-bus init                                   # crea los topics
@@ -20,6 +22,7 @@ import argparse
 import json
 import logging
 import sys
+import time
 import uuid
 from collections.abc import Callable
 from datetime import UTC, datetime
@@ -30,6 +33,7 @@ from confluent_kafka.admin import AdminClient, NewTopic
 from jsonschema import Draft202012Validator, ValidationError
 
 from trlavanda.config import KAFKA_BOOTSTRAP, ROOT
+from trlavanda.logs import correlation_id
 
 CONTRACTS_DIR = ROOT / "contracts"
 EVENTS_DIR = CONTRACTS_DIR / "events"
@@ -131,11 +135,25 @@ class Publisher:
         self._send(topic, key or str(data.get(cfg["key"], cfg["key"])), event)
         return event
 
-    def _send(self, topic: str, key: str, value: dict | bytes) -> None:
+    def dead_letter(
+        self, topic: str, key: str, value: dict | bytes, error: str, attempts: int = 1
+    ) -> None:
+        """Manda un mensaje a `<topic>.dlq` con el motivo en las cabeceras."""
+        log.error("A la DLQ %s.dlq tras %d intento(s): %s", topic, attempts, error)
+        headers = {"error": error[:2000], "attempts": str(attempts), "source": self.source}
+        self._send(f"{topic}.dlq", key, value, headers=headers)
+
+    def _send(
+        self, topic: str, key: str, value: dict | bytes, headers: dict[str, str] | None = None
+    ) -> None:
         errors = []
         payload = value if isinstance(value, bytes) else json.dumps(value).encode()
         self._producer.produce(
-            topic, key=key.encode(), value=payload, on_delivery=lambda err, _: errors.append(err)
+            topic,
+            key=key.encode(),
+            value=payload,
+            headers={k: v.encode() for k, v in (headers or {}).items()},
+            on_delivery=lambda err, _: errors.append(err),
         )
         self._producer.flush(10)
         if not errors or errors[0] is not None:
@@ -153,12 +171,16 @@ def consume(
     raw: bool = False,
     config: dict | None = None,
     on_idle: Callable[[], None] | None = None,
+    retries: int = 0,
+    backoff_s: float = 5.0,
 ) -> None:
     """Bucle de consumo. Llama a `handler(evento)` y confirma el mensaje después.
 
-    Si `handler` lanza una excepción, NO se confirma: el bucle termina con el error y, al
-    reiniciar el servicio, el mensaje se vuelve a recibir. (Reintentos con espera: hito 5.)
-    Con `raw=True` no se valida y `handler` recibe el texto tal cual (para inspeccionar DLQs).
+    Si `handler` lanza una excepción se reintenta hasta `retries` veces, esperando
+    backoff_s, 4·backoff_s, 16·backoff_s... Si sigue fallando y el topic tiene DLQ, el mensaje
+    va allí con el error y se continúa. Si no tiene DLQ, el error sube, el mensaje NO se
+    confirma y, al reiniciar el servicio, se vuelve a recibir.
+    Con `raw=True` no se valida y `handler` recibe {"value": texto, "headers": {...}} (DLQs).
     `config`: opciones extra de librdkafka (p. ej. `max.poll.interval.ms` para trabajos largos).
     `on_idle`: se llama cada vez que pasa 1 s sin mensajes (para trabajos que esperan a que
     lleguen todos los eventos de una tanda antes de empezar).
@@ -186,21 +208,61 @@ def consume(
                     continue
                 raise KafkaException(msg.error())
             if raw:
-                handler(msg.value().decode(errors="replace"))
+                headers = {k: (v or b"").decode() for k, v in (msg.headers() or [])}
+                handler({"value": msg.value().decode(errors="replace"), "headers": headers})
                 consumer.commit(message=msg, asynchronous=False)
                 continue
+            key = (msg.key() or b"").decode()
+            has_dlq = TOPICS.get(msg.topic(), {}).get("dlq", False)
             try:
                 event = json.loads(msg.value())
                 validate(event)
             except (ValueError, ValidationError, KeyError) as e:
                 log.error("Mensaje inválido en %s (offset %s): %s", msg.topic(), msg.offset(), e)
-                if TOPICS.get(msg.topic(), {}).get("dlq"):
-                    dlq._send(f"{msg.topic()}.dlq", (msg.key() or b"").decode(), msg.value())
+                if has_dlq:
+                    dlq.dead_letter(msg.topic(), key, msg.value(), f"no cumple el contrato: {e}")
             else:
-                handler(event)
+                token = correlation_id.set(event["correlation_id"])
+                try:
+                    _handle_with_retries(handler, event, retries, backoff_s, stop)
+                except Exception as e:
+                    if not has_dlq:
+                        raise
+                    dlq.dead_letter(msg.topic(), key, msg.value(), repr(e), attempts=retries + 1)
+                finally:
+                    correlation_id.reset(token)
             consumer.commit(message=msg, asynchronous=False)
     finally:
         consumer.close()
+
+
+def _handle_with_retries(
+    handler: Callable[[dict], None],
+    event: dict,
+    retries: int,
+    backoff_s: float,
+    stop: Callable[[], bool],
+) -> None:
+    for attempt in range(retries + 1):
+        try:
+            handler(event)
+            return
+        except Exception as e:
+            if attempt == retries:
+                raise
+            wait = backoff_s * 4**attempt
+            log.warning(
+                "Intento %d/%d fallido (%r): se reintenta en %.0f s",
+                attempt + 1,
+                retries + 1,
+                e,
+                wait,
+            )
+            deadline = time.monotonic() + wait
+            while time.monotonic() < deadline and not stop():  # espera interrumpible
+                time.sleep(min(1.0, deadline - time.monotonic()))
+            if stop():
+                raise
 
 
 # ---------- CLI ----------
@@ -234,7 +296,7 @@ def main() -> None:
             consume(
                 [args.topic],
                 group_id=f"cli-tail-{uuid.uuid4().hex[:8]}",
-                handler=lambda ev: print(ev if raw else json.dumps(ev, indent=2)),
+                handler=lambda ev: print(json.dumps(ev, indent=2, ensure_ascii=False)),
                 raw=raw,
             )
         except KeyboardInterrupt:

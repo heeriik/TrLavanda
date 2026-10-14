@@ -66,6 +66,7 @@ services:
       KAFKA_BOOTSTRAP: kafka:29092
       INGEST_PUBLIC_URL: http://ingest:8000   # dirección que va dentro de los eventos
       SEC_USER_AGENT: ${SEC_USER_AGENT:?Falta SEC_USER_AGENT en .env}
+      TQDM_DISABLE: "1"   # sin barras de progreso en los logs
     ports:
       - "127.0.0.1:8001:8000"
     volumes:
@@ -115,6 +116,23 @@ services:
         condition: service_started
       factors:
         condition: service_started
+    restart: unless-stopped
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: services/scheduler/Dockerfile
+    image: trlavanda-scheduler
+    environment:
+      KAFKA_BOOTSTRAP: kafka:29092
+      SCHEDULE_AT: "22:30"                  # UTC, tras el cierre de Wall Street
+      SCHEDULE_DAYS: mon,tue,wed,thu,fri
+      DATASETS: universe,edgar,prices
+    ports:
+      - "127.0.0.1:8003:8000"
+    depends_on:
+      topics:
+        condition: service_completed_successfully
     restart: unless-stopped
 
   kafka-ui:

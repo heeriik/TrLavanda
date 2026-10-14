@@ -22,8 +22,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/heeriik/TrLavanda/libs/go/contracts"
 	"github.com/heeriik/TrLavanda/services/gateway/internal/api"
-	"github.com/heeriik/TrLavanda/services/gateway/internal/contracts"
 	"github.com/heeriik/TrLavanda/services/gateway/internal/data"
 	"github.com/heeriik/TrLavanda/services/gateway/internal/feed"
 )
@@ -86,6 +86,13 @@ func main() {
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(map[string]any{"ok": true, "ready": srv.Ready(), "versions": versions()})
+	})
+	mux.HandleFunc("GET /readyz", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if !srv.Ready() {
+			w.WriteHeader(http.StatusServiceUnavailable)
+		}
+		_ = json.NewEncoder(w).Encode(map[string]bool{"ready": srv.Ready()})
 	})
 	mux.Handle("/", srv.Handler())
 	server := &http.Server{Addr: *addr, Handler: mux, ReadHeaderTimeout: 10 * time.Second}

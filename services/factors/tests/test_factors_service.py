@@ -25,6 +25,9 @@ class FakePublisher:
     def of(self, topic):
         return [e for t, e in self.sent if t == topic]
 
+    def dead_letter(self, topic, key, value, error, attempts=1):
+        self.sent.append((f"{topic}.dlq", {"value": value, "error": error, "attempts": attempts}))
+
 
 class Clock:
     def __init__(self):
@@ -154,7 +157,7 @@ def test_falta_un_dataset_espera(env):
     assert w.state["pending"] is False  # no se queda reintentando en bucle
 
 
-def test_error_deja_pendiente_y_avisa(env, tmp_path):
+def test_error_reintenta_con_espera_y_al_final_va_a_la_dlq(env):
     make_worker, pub, clock, calls = env
 
     def roto(inputs, work):
@@ -165,10 +168,40 @@ def test_error_deja_pendiente_y_avisa(env, tmp_path):
     for ds in ("universe", "edgar", "prices"):
         w.on_event(updated(ds, "20261014T090000Z"))
     clock.t += 20
-    with pytest.raises(RuntimeError):
-        w.on_idle()
+    w.on_idle()  # intento 1: falla, sin excepción hacia fuera (el servicio no se cae)
     assert pub.of("jobs.status")[-1]["data"]["state"] == "failed"
-    assert make_worker().state["pending"] is True  # al reiniciar se reintentará
+    assert w.state["pending"] is True and w.state["attempts"] == 1
+
+    fallos = lambda: sum(e["data"]["state"] == "failed" for e in pub.of("jobs.status"))  # noqa: E731
+    clock.t += 30
+    w.on_idle()  # aún no toca (espera 60 s)
+    assert fallos() == 1
+    for espera in (60, 240, 960):  # 60 s, 4 min, 16 min
+        clock.t += espera
+        w.on_idle()
+    (dlq,) = pub.of("data.updated.dlq")
+    assert dlq["attempts"] == 4 and "sin memoria" in dlq["error"]
+    assert dlq["value"]["data"]["dataset"] == "prices"  # el último evento de la tanda
+    assert w.state["pending"] is False  # deja de insistir hasta que lleguen datos nuevos
+    assert "abandonado" in pub.of("jobs.status")[-1]["data"]["detail"]
+
+
+def test_tras_un_fallo_un_reinicio_reintenta(env):
+    make_worker, pub, clock, calls = env
+
+    def roto(inputs, work):
+        raise RuntimeError("disco lleno")
+
+    w = make_worker()
+    w.compute = roto
+    for ds in ("universe", "edgar", "prices"):
+        w.on_event(updated(ds, "20261014T090000Z"))
+    clock.t += 20
+    w.on_idle()
+    w2 = make_worker()  # el estado (pendiente, 1 intento) está en disco
+    assert w2.state["pending"] is True and w2.state["attempts"] == 1
+    w2.on_idle()
+    assert calls["compute"] == 1  # el cálculo bueno del worker nuevo
 
 
 def test_nuevo_metodo_recalcula_al_arrancar(env):

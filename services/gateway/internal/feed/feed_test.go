@@ -13,7 +13,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/heeriik/TrLavanda/services/gateway/internal/contracts"
+	"github.com/heeriik/TrLavanda/libs/go/contracts"
 	"github.com/heeriik/TrLavanda/services/gateway/internal/data"
 )
 

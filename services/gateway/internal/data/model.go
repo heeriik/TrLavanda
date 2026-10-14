@@ -9,7 +9,7 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/heeriik/TrLavanda/services/gateway/internal/contracts"
+	"github.com/heeriik/TrLavanda/libs/go/contracts"
 )
 
 // Data es todo lo que sirve la API, en memoria y de solo lectura. Cuando llega una versión

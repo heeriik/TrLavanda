@@ -39,6 +39,7 @@ class Worker:
         self.steps = steps  # inyectable: los tests no descargan nada
 
     def status(self, job: str, state: str, cid: str, **extra) -> None:
+        log.info("%s: %s %s", job, state, extra.get("detail", ""))
         self.publisher.publish(
             "jobs.status",
             {"service": SERVICE, "job": job, "state": state, **extra},

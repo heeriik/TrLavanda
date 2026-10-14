@@ -19,7 +19,7 @@ def main() -> None:
     parser.add_argument("--sample", type=int, default=None, help="limitar a N tickers")
     parser.add_argument("--skip-edgar", action="store_true")
     parser.add_argument("--skip-prices", action="store_true")
-    parser.add_argument("--refresh", action="store_true", help="re-descargar EDGAR aunque exista")
+    parser.add_argument("--refresh", action="store_true", help="re-descargar EDGAR aunque la caché sea reciente")
     args = parser.parse_args()
 
     print("1/4 Universo S&P 500 histórico (Wikipedia)...")

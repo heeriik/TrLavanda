@@ -22,6 +22,7 @@ FACTS_URL = "https://data.sec.gov/api/xbrl/companyfacts/CIK{cik:010d}.json"
 SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik:010d}.json"
 
 FACTS_DIR = RAW_DIR / "edgar" / "companyfacts"
+CACHE_DAYS = 3  # días que se reutiliza un companyfacts descargado
 META_PATH = RAW_DIR / "edgar" / "company_meta.parquet"
 
 # Conceptos XBRL que necesitan los factores. Las empresas usan nombres distintos para lo
@@ -153,13 +154,20 @@ def facts_to_frame(payload: dict) -> pl.DataFrame:
     )
 
 
-def download_facts(ciks: list[int], client: SecClient, refresh: bool = False) -> list[int]:
-    """Descarga companyfacts de cada CIK a Parquet (con caché). Devuelve los CIK sin datos."""
+def download_facts(
+    ciks: list[int], client: SecClient, refresh: bool = False, max_age_days: float = CACHE_DAYS
+) -> list[int]:
+    """Descarga companyfacts de cada CIK a Parquet (con caché). Devuelve los CIK sin datos.
+
+    Un archivo con más de `max_age_days` días se vuelve a descargar: así se recogen los
+    informes trimestrales nuevos.
+    """
     FACTS_DIR.mkdir(parents=True, exist_ok=True)
     missing = []
     for cik in tqdm(ciks, desc="EDGAR companyfacts"):
         path = FACTS_DIR / f"{cik:010d}.parquet"
-        if path.exists() and not refresh:
+        fresh = path.exists() and (time.time() - path.stat().st_mtime) < max_age_days * 86400
+        if fresh and not refresh:
             continue
         payload = client.get_json(FACTS_URL.format(cik=cik))
         if payload is None:

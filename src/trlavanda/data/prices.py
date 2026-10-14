@@ -28,6 +28,16 @@ from trlavanda.config import RAW_DIR, START_DATE
 
 PRICES_PATH = RAW_DIR / "prices" / "prices.parquet"
 BASE_COLS = ["date", "ticker", "close", "volume", "dividends", "splits"]
+# Tipos de las columnas base. Una tabla vacía SIN tipos (columnas Null) no se puede concatenar
+# con una con fechas en Polars 2 ("type Date is incompatible with expected type Null").
+BASE_SCHEMA = {
+    "date": pl.Date,
+    "ticker": pl.Utf8,
+    "close": pl.Float64,
+    "volume": pl.Float64,
+    "dividends": pl.Float64,
+    "splits": pl.Float64,
+}
 
 OVERLAP_DAYS = 10  # días que se vuelven a pedir para comprobar que nada ha cambiado
 STALE_DAYS = 30  # un ticker sin precio en 30 días se da por deslistado y no se consulta
@@ -84,7 +94,7 @@ def _to_long(data: pd.DataFrame, tickers: list[str]) -> pl.DataFrame:
                 pl.col("Stock Splits").cast(pl.Float64).alias("splits"),
             )
         )
-    return pl.concat(frames) if frames else pl.DataFrame(schema=dict.fromkeys(BASE_COLS))
+    return pl.concat(frames) if frames else pl.DataFrame(schema=BASE_SCHEMA)
 
 
 def _download(tickers: list[str], start: str, threads: bool) -> pd.DataFrame:
@@ -119,7 +129,7 @@ def fetch(
             frames.append(_to_long(data, [t]))
 
     frames = [f.select(BASE_COLS) for f in frames if f.height > 0]
-    return pl.concat(frames) if frames else pl.DataFrame(schema=dict.fromkeys(BASE_COLS))
+    return pl.concat(frames) if frames else pl.DataFrame(schema=BASE_SCHEMA)
 
 
 def needs_full_refetch(old: pl.DataFrame, new: pl.DataFrame) -> set[str]:
@@ -152,7 +162,7 @@ def update_prices(
     """
     today = today or date.today()
     if full or not PRICES_PATH.exists():
-        old = pl.DataFrame(schema=dict.fromkeys(BASE_COLS))
+        old = pl.DataFrame(schema=BASE_SCHEMA)
         new_tickers, active = [t for t in tickers if t not in skip or full], []
     else:
         old = pl.read_parquet(PRICES_PATH).select(BASE_COLS)

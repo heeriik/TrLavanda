@@ -71,8 +71,13 @@ Contexto para retomar el trabajo (para el usuario y para Claude en futuras sesio
   Scheduler Go (`services/scheduler`, 22:30 UTC L-V, run_id `daily-AAAA-MM-DD`). Go compartido en `libs/go`
   (contracts + events) con `replace` en cada go.mod; tras cambiar deps: `GOWORK=off go mod tidy` en cada módulo
   (Docker compila sin go.work). Reintentos + DLQ en `bus.consume(retries, backoff_s)` y en factors.on_idle.
-  Logs JSON: `trlavanda.logs.setup(servicio)`. **Siguiente: hito 6** (despliegue: buildx arm64, VM Oracle
-  Always Free, Cloudflare Tunnel —falta decidir dominio—, `PROD_API_BASE`). Pendiente: imágenes Python 1,35 GB.
+  Logs JSON: `trlavanda.logs.setup(servicio)`.
+- [~] Hito 6, despliegue (`docs/DESPLIEGUE.md`): **Tailscale Funnel** en vez de Cloudflare (sin dominio, 0 €,
+  URL fija `https://trlavanda.<tailnet>.ts.net`). Oracle Always Free es ahora 2 OCPU / 12 GB (recorte 2026).
+  `deploy/compose.prod.yaml` + `deploy/setup-vm.sh` (construye en la VM ARM). Probado: imágenes arm64 y
+  arranque en limpio (sin Tailscale). **Esperando al usuario**: cuentas de Tailscale y Oracle, VM creada;
+  luego poner la URL en `PROD_API_BASE` (web/js/config.js) y `uv run trl-web --publish`.
+  Pendiente: imágenes Python 1,35 GB.
 - [ ] Fase 3: backtest (añadir curva estrategia vs SPY a la web cuando esté)
 - [ ] Fase 4: Google Cloud (opcional; requiere cuenta de facturación + alertas de presupuesto)
 - [x] Publicado en https://github.com/heeriik/TrLavanda (público, MIT). Commits con email noreply de GitHub. `gh` está en `C:\Program Files\GitHub CLI\gh.exe` (la pestaña de terminal del app no completa `gh auth login`; lanzarlo en segundo plano).

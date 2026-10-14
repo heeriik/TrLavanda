@@ -1,0 +1,34 @@
+# Producción (VM de Oracle). Se combina con el compose.yaml de la raíz:
+#
+#   docker compose -f compose.yaml -f deploy/compose.prod.yaml up -d --build
+#
+# Diferencias con local:
+# - Kafka UI no se arranca (ahorra ~320 MB). Si hace falta: añadir `--profile dev`.
+# - Tailscale Funnel publica en internet SOLO el gateway, por HTTPS, en
+#   https://trlavanda.<tu-tailnet>.ts.net . La VM no abre ningún puerto: el contenedor de
+#   Tailscale sale hacia fuera y el tráfico entra por esa conexión (como Cloudflare Tunnel).
+# - El resto de puertos siguen atados a 127.0.0.1 de la VM: no se ven desde internet, pero sirven
+#   para depurar con un túnel SSH (ssh -L 8000:127.0.0.1:8000 ubuntu@IP).
+
+services:
+  kafka-ui:
+    profiles: ["dev"]
+
+  tailscale:
+    image: tailscale/tailscale:v1.96.5
+    hostname: trlavanda          # -> https://trlavanda.<tu-tailnet>.ts.net
+    environment:
+      TS_AUTHKEY: ${TS_AUTHKEY:?Falta TS_AUTHKEY en .env (ver docs/DESPLIEGUE.md)}
+      TS_HOSTNAME: trlavanda
+      TS_STATE_DIR: /var/lib/tailscale   # la identidad del nodo sobrevive a reinicios
+      TS_USERSPACE: "true"               # sin privilegios ni /dev/net/tun
+      TS_SERVE_CONFIG: /config/serve.json
+    volumes:
+      - tailscale-state:/var/lib/tailscale
+      - ./deploy/tailscale:/config:ro
+    depends_on:
+      - gateway
+    restart: unless-stopped
+
+volumes:
+  tailscale-state:

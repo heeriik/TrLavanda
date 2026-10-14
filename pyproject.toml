@@ -5,7 +5,7 @@ description = "Screener y backtest de inversión por factores (valor, calidad, m
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "polars>=1.20",
+    "polars>=2.0,<3",       # sin límite, la 2.0 entró sola en el lockfile y rompió el primer arranque
     "pyarrow>=18",          # puente Polars <-> pandas (yfinance devuelve pandas)
     "pandas>=2.2",          # solo donde una librería lo exige (yfinance, read_html)
     "lxml>=5",              # parser HTML para leer las tablas de Wikipedia
